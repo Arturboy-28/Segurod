@@ -200,64 +200,99 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 
 ---
 
-## 6. Arquitectura lógica (borrador)
+## 6. Arquitectura por módulos (requerimiento de diseño)
+
+**Principio:** el producto se maneja por **tipos de módulo**. Cada función nueva o cambio de característica debe vivir dentro de **un solo módulo**. Los demás solo se enteran por contratos estables (eventos / APIs internas), no por lógica mezclada.
+
+### 6.1 Tipos de módulo
+
+| Tipo | Rol | Ejemplo |
+|------|-----|---------|
+| **Core / plataforma** | Tenant, auth, permisos, auditoría — base de todos | `mod-tenancy`, `mod-identity` |
+| **Canal** | Entrada/salida con el mundo exterior | `mod-whatsapp`, `mod-web-quote`, `mod-pwa` |
+| **Dominio** | Negocio de seguros (una capacidad clara) | `mod-cotizacion`, `mod-cartera`, `mod-comisiones` |
+| **Experiencia** | UI/portal para un actor | `mod-portal-agente`, `mod-portal-cliente`, `mod-portal-ceo` |
+| **Integración** | Adapters externos enchufables | `mod-providers-api` |
+| **Comunicaciones** | Envíos y alertas (sin dueñarse del negocio) | `mod-notificaciones` |
+
+### 6.2 Catálogo de módulos (límites)
+
+| ID | Módulo | Tipo | Responsabilidad (solo esto) | Qué NO debe meterse aquí |
+|----|--------|------|-----------------------------|---------------------------|
+| `mod-tenancy` | Tenancy SaaS | Core | Alta de oficina, aislamiento de datos, plan | UI de cotizar |
+| `mod-identity` | Usuarios y permisos | Core | Roles, vendedores, splits internos de comisión | Cálculo de prima |
+| `mod-config` | Configuración tenant | Core | Logo, datos empresa, direcciones, SMTP, toggles API | Emisión de pólizas |
+| `mod-audit` | Auditoría | Core | Bitácora quién/qué/cuándo | Reglas de negocio |
+| `mod-cotizacion` | Cotización | Dominio | Cotizar manual/API/mixto, leads, vigencia, tokens | Agenda o portal |
+| `mod-providers-api` | APIs aseguradoras | Integración | Adapters, sandbox/prod, tablas % comisión cia. | Split interno agente |
+| `mod-cartera` | Cartera | Dominio | Clientes, pólizas, ramos, estatus, docs | Facturar comisiones |
+| `mod-agenda` | Agenda | Dominio | Citas, tareas, seguimientos | WhatsApp transport |
+| `mod-comisiones` | Comisiones | Dominio | Por facturar / por pagar / pagadas, facturas a cias. | Login/PWA |
+| `mod-renovaciones` | Renovaciones / vencimientos | Dominio | Reglas de vencimiento, cola de renovación | Diseño del portal |
+| `mod-notificaciones` | Notificaciones | Comunicaciones | Email, push, plantillas, reglas de alerta | Datos de póliza (solo recibe eventos) |
+| `mod-pwa` | PWA | Canal | Instalar en inicio, service worker, Web Push wiring | Contenido de negocio |
+| `mod-whatsapp` | WhatsApp | Canal | Webhook, menús, envío de enlaces/mensajes | Motor de tarifas |
+| `mod-web-quote` | Cotizador web | Canal / experiencia | Wizard móvil público | Panel CEO |
+| `mod-portal-agente` | Portal administrativo | Experiencia | UI agentes: hoy, leads, atajos a módulos | Lógica de primas |
+| `mod-portal-cliente` | Portal cliente | Experiencia | UI asegurado: pólizas, vencimientos, docs | Tablas de comisión |
+| `mod-portal-ceo` | Panel CEO | Experiencia | Resúmenes y cortes por ramo/agente | Persistencia de pólizas (consume datos) |
+| `mod-billing-saas` | Billing Segurod | Core (fase 2+) | Suscripción, límites de plan | Comisiones de aseguradoras |
+
+### 6.3 Reglas para editar sin romper otros módulos
+
+1. **Un cambio = un módulo.** Feature nueva → se asigna a un ID del catálogo (o se crea un módulo nuevo con límite claro).
+2. **Prohibido acoplar lógica interna** de otro módulo (ej. `mod-whatsapp` no calcula primas; llama a `mod-cotizacion`).
+3. **Contratos entre módulos:**
+   - Pedidos: API interna / casos de uso (`Cotizar`, `RegistrarPoliza`)
+   - Avisos: eventos (`CotizacionCreada`, `PolizaPorVencer`, `ComisionGenerada`)
+4. **`mod-notificaciones` solo reacciona a eventos** — no decide vencimientos; eso es `mod-renovaciones`.
+5. **Adapters de aseguradora** solo viven en `mod-providers-api`; apagar uno no toca cartera ni agenda.
+6. **Portales (`mod-portal-*`) son capas finas de UI** — orquestan, no duplican reglas.
+7. **Features por plan SaaS:** se habilitan/deshabilitan por módulo (`mod-tenancy` / plan), no con `if` dispersos.
+8. Al documentar un cambio: indicar **módulo afectado** + eventos públicos tocados (si aplica).
+
+### 6.4 Diagrama lógico (módulos)
 
 ```
-┌─────────────┐     ┌─────────────┐
-│  WhatsApp   │     │  Web móvil  │
-│  Cloud API  │     │  /cotizar   │
-└──────┬──────┘     └──────┬──────┘
-       │                   │
-       └─────────┬─────────┘
-                 ▼
-        ┌────────────────┐
-        │  API Segurod   │  sesiones, leads, cotizaciones
-        └────────┬───────┘
-                 ▼
-        ┌────────────────┐
-        │ Quote Engine   │  según: manual | API | mixto
-        └────────┬───────┘
-     ┌───────────┼──────────────┐
-     ▼           ▼              ▼
- Manual      Provider A     Provider B
- (agente)   (si toggle ON) (si toggle ON)
-                 │
-                 ▼
-        ┌────────────────────────────────────────────┐
-        │           Panel agente (CRM)               │
-        │  agenda · cartera · comisiones · leads     │
-        │  config: toggles API / sandbox / prod      │
-        └───────────────────┬────────────────────────┘
-                            │
-              ┌─────────────┴─────────────┐
-              ▼                           ▼
-     Portal del cliente            Motor de avisos
-     (pólizas / vencimientos)      (WhatsApp / email / push)
+                    ┌─────────────┐  ┌──────────────┐
+                    │ mod-whatsapp│  │ mod-web-quote│
+                    └──────┬──────┘  └──────┬───────┘
+                           │                │
+                           ▼                ▼
+                    ┌─────────────────────────┐
+                    │     mod-cotizacion      │──► mod-providers-api
+                    └────────────┬────────────┘
+                                 │ eventos
+         ┌───────────────────────┼───────────────────────┐
+         ▼                       ▼                       ▼
+  mod-cartera              mod-agenda            mod-comisiones
+         │                       │                       │
+         └───────────────────────┼───────────────────────┘
+                                 │
+                    ┌────────────┴────────────┐
+                    ▼                         ▼
+           mod-renovaciones          mod-notificaciones
+                    │                         │
+                    │                         ├── push/email/WA
+                    │                         └── mod-pwa
+                    ▼
+     ┌──────────────┼──────────────┐
+     ▼              ▼              ▼
+ portal-agente  portal-cliente  portal-ceo
+     │
+     └── Core: tenancy · identity · config · audit · billing-saas
 ```
 
-**Componentes conceptuales (sin implementación aún):**
+### 6.5 Cómo se usa esto al crecer el producto
 
-| Módulo | Responsabilidad |
-|--------|-----------------|
-| Canal WhatsApp | Webhook, menús, enlace, resumen de ofertas, recordatorios |
-| Cotizador web | Wizard móvil, comparador, detalle |
-| Quote Engine | Enruta cotización a **manual** o **API** según toggles |
-| Adapters | Un adapter por agregador/aseguradora (se encienden cuando hay credenciales) |
-| Config de providers | Toggles ON/OFF, sandbox/prod, claves encriptadas |
-| Leads & cotizaciones | Persistencia, vigencia, token; origen manual o API |
-| Agenda | Citas, seguimientos, tareas del día |
-| Cartera | Clientes, pólizas, ramos, aseguradoras, estatus |
-| Comisiones | Por facturar, facturadas, por pagar, pagadas |
-| Facturación a aseguradoras | Generar / registrar factura de comisión (CFDI si aplica) |
-| Recordatorios | Vencimientos y renovaciones automáticas |
-| Portal del cliente | Login cliente: pólizas, vencimientos, documentos |
-| Tenancy SaaS | Cada oficina = tenant (datos y config aislados) |
-| Configuración del tenant | Logo, datos empresa/agente, direcciones, correo, APIs, respaldos |
-| Tablas de comisión aseguradora | % por compañía / ramo / producto |
-| Comisiones internas | Split por usuario/agente |
-| Usuarios y permisos | CEO/dueño, admin, vendedor, asistente (+ cliente) |
-| Panel CEO | Resúmenes globales y por categoría/ramo |
-| Auditoría | Log de acciones (quién hizo qué y cuándo) |
+| Pedido de negocio | Módulo a tocar | Evitar tocar |
+|-------------------|----------------|--------------|
+| Nueva alerta push de “cotización lista” | `mod-notificaciones` (+ evento desde cotización) | Portales enteros |
+| Soporte ramo hogar | `mod-cotizacion` + `mod-cartera` (categoría) | WhatsApp transport |
+| Nuevo % comisión Quálitas | `mod-providers-api` | Usuarios |
+| Nuevo split de un vendedor | `mod-identity` | Providers |
+| Widget nuevo en panel CEO | `mod-portal-ceo` | Cartera (salvo lectura) |
+| Factura CFDI de comisión | `mod-comisiones` | Cotización |
 
 ---
 
@@ -393,6 +428,32 @@ Vista filtrable para admin/dueño; retención configurable (ej. 90 días / 1 añ
 - Plan activo, límites (usuarios, cotizaciones, WhatsApp)
 - Facturación de la suscripción Segurod (separada de comisiones a aseguradoras)
 
+#### Alertas push (cliente y administrativo)
+El tenant puede **definir y encender** alertas push hacia:
+
+| Destino | Ejemplos de alerta |
+|---------|-------------------|
+| **Portal del cliente** | Póliza por vencer, cotización lista, documento disponible, renovación, mensaje del agente |
+| **Portal administrativo** (agente / admin / CEO) | Lead nuevo, cita próxima, vencimientos del día, comisión pagada, cotización ganada/perdida, meta |
+
+Configurables:
+- Activar/desactivar por tipo de alerta  
+- Destinatarios (rol, agente asignado, cliente de la póliza)  
+- Antelación (ej. 30 / 15 / 7 días antes del vencimiento)  
+- Canal: **push** (y opcionalmente WhatsApp / email en paralelo)
+
+#### PWA — “Agregar a inicio” (iPhone / Android)
+Para que las alertas push funcionen bien en móvil sin app de tienda:
+
+- Portales (**cliente** y **administrativo**) como **PWA** instalable  
+- Flujo guiado: “Agregar a pantalla de inicio” (iOS Safari / Android Chrome)  
+- Service worker + Web Push (y lo que requiera iOS para notificaciones en PWA instalada)  
+- Permiso de notificaciones solo después de instalar / interacción del usuario  
+- Icono = logo del tenant (o Segurod)  
+- Si no hay push (permiso negado): fallback a email / WhatsApp / badge in-app
+
+---
+
 ### 8.0b Panel CEO / dirección (requerido)
 
 Vista ejecutiva de **toda la oficina** (no solo la cartera de un vendedor). Pensado para el dueño/CEO.
@@ -495,6 +556,8 @@ Login del asegurado para:
 - Descargar documentos (póliza, recibo) cuando existan  
 - Solicitar renovación / “quiero que me cotice”  
 - Actualizar datos de contacto  
+- **Instalar en inicio** (PWA) y activar **alertas push**  
+- Centro de notificaciones in-app  
 - (Opcional) ver historial de siniestros / estatus de reporte
 
 ---
@@ -566,6 +629,7 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 - [x] Definir módulo agente: agenda, comisiones, cartera, recordatorios, portal  
 - [x] Modelo SaaS: config (logo, datos, correo, usuarios, permisos, auditoría, respaldos)  
 - [x] Comisiones por aseguradora + split interno por agente + panel CEO  
+- [x] Arquitectura por tipos de módulo (cambios aislados por módulo)  
 - [ ] Validar país, ramos y figura legal  
 - [ ] Elegir partners de API  
 - [ ] Boceto UX: config + panel agente + panel CEO + portal cliente — **sin código**
@@ -589,7 +653,9 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 - Cartera de pólizas (alta manual o import CSV)  
 - Agenda y tareas  
 - Recordatorios de vencimiento (email y/o WhatsApp)  
-- Portal cliente básico (pólizas + vencimientos)
+- Portal cliente básico (pólizas + vencimientos)  
+- PWA “agregar a inicio” (cliente + admin) + opt-in de **push**  
+- Config de tipos de alerta (vencimiento, lead nuevo, etc.)
 
 ### Fase 3 — API opcional + comisiones
 
@@ -642,6 +708,8 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 | CFDI / factura mal diseñada | Empezar con “registro de factura” y enlazar PAC después |
 | Recordatorios molestos | Reglas claras + opt-out + tope por póliza |
 | Portal sin adopción | Activarlo al emitir / renovar y mandar link por WA |
+| Push en iPhone sin instalar | Guiar a “Agregar a inicio”; sin PWA instalada el push es limitado |
+| Usuario niega notificaciones | Fallback email/WhatsApp + centro in-app |
 | Mezcla de datos entre oficinas | Multi-tenant estricto; nunca compartir tablas sin `tenant_id` |
 | Vendedor ve comisiones ajenas | Permisos por rol + cartera asignada |
 | SMTP mal configurado | Test de envío + logs + fallback de plataforma |
