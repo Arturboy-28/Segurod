@@ -606,62 +606,87 @@ Login del asegurado para:
 
 ---
 
-## 9. Ideas adicionales (software típico de agentes)
+## 9. Backlog de ideas (candidatas — se pueden recortar después)
 
-Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar después del núcleo (secciones 8 y 8A).  
-*Nota: logo, usuarios/permisos, auditoría y white-label básico ya están en Configuración SaaS (§8).*
+Lista amplia para no perder ideas. **No todo es compromiso de MVP.**  
+Fuentes: Softseguros, EFISeguros, Winsef, Figuro, Foliume, segElevia, BrokerDO, AMS360, Applied Epic, AgencyBloc, HawkSoft, EZLynx, etc.  
+*Ya cubierto en núcleo (§8 / 8A): logo, usuarios/permisos, auditoría, white-label básico, comisiones cia/agente, panel CEO, push/PWA, SAT multi-RFC.*
 
-### Alta prioridad (casi estándar en el mercado)
+### 9.1 Prioridad alta (casi estándar en ERP/AMS de agencias)
 
-| Idea | Para qué sirve |
-|------|----------------|
-| **Pipeline de ventas / embudo** | Lead → contactado → cotizado → negociación → ganado/perdido |
-| **Bandeja unificada WhatsApp** | Varios agentes, asignación, historial en la ficha del cliente |
-| **Alertas de cobranza (recibo)** | No solo vence la póliza: también el pago fraccionado |
-| **Renovaciones en un tablero** | “Esta semana hay 23 por renovar” con % retenido |
-| **Documentos del cliente** | INE, comprobante, factura auto, fotos, solicitudes |
-| **Reportes y tablero** | Primas, emisiones, retención, comisiones del mes |
-| **Plantillas de mensajes** | WA/email: cotización lista, faltan datos, feliz cumpleaños, vencimiento |
-| **Sucursales** | Varias direcciones/equipos bajo el mismo tenant |
+| Idea | Módulo sugerido | Para qué sirve |
+|------|-----------------|----------------|
+| **Recibos de prima / cobranza** | `mod-cartera` o `mod-cobranza` | Pagos parciales, vencidos, pendientes; no solo vigencia de póliza |
+| **Alertas de mora** | `mod-renovaciones` + `mod-notificaciones` | Recibo fraccionado impago |
+| **Remesas a aseguradora** | `mod-cobranza` | Lo cobrado al cliente vs lo girado a la cia. |
+| **Conciliación borderó / planilla** | `mod-comisiones` | Cargar estado de cuenta de la cia. y detectar diferencias |
+| **Pipeline / embudo de ventas** | `mod-cotizacion` / CRM | Lead → cotizado → negociación → ganado/perdido |
+| **Bandeja unificada WhatsApp** | `mod-whatsapp` | Multiagente, asignación, historial en ficha |
+| **Tablero de renovaciones + % retención** | `mod-renovaciones` + `mod-portal-ceo` | Cola semanal/mensual |
+| **Documentos del cliente** | `mod-cartera` | INE, factura auto, póliza PDF, solicitudes |
+| **Plantillas de mensajes** | `mod-notificaciones` | Cotización, falta info, cumpleaños, vencimiento |
+| **Sucursales / equipos** | `mod-tenancy` + `mod-identity` | Varias sedes bajo un tenant |
+| **Ficha 360 del cliente** | `mod-portal-agente` | Pólizas + recibos + siniestros + chat + tareas |
+| **Bitácora de interacciones** | `mod-portal-agente` | WA, llamada, email, notas en un timeline |
 
-### Media prioridad (diferenciadores)
+### 9.2 Prioridad media (diferenciadores)
 
-| Idea | Para qué sirve |
-|------|----------------|
-| **Comparativo PDF / propuesta formal** | Enviar 3 opciones con logo de la oficina |
-| **Recotización en 1 clic** | Renovar con mismos datos del año pasado |
-| **Endosos y movimientos** | Cambio de auto, alta de conductor, domicilio |
-| **Siniestros (mesa ligera)** | Alta de reporte, folios, seguimiento, documentos |
-| **Metas y bonos** | Escalones sobre el split interno ya definido en usuarios |
-| **App móvil del agente** | Agenda + cartera + cotizar en campo |
-| **Importar cartera** | Excel / CSV desde otras oficinas o portales |
-| **Estados de cuenta vs aseguradora** | Conciliación automática o semi (cargar Excel de la cia.) |
-| **Firma digital / checklist de emisión** | Documentos listos antes de emitir |
-| **NPS / encuesta post-emisión** | Calidad de atención |
+| Idea | Módulo sugerido | Para qué sirve |
+|------|-----------------|----------------|
+| **Siniestros (mesa ligera)** | `mod-siniestros` (nuevo) | Folio, estatus, docs, montos, aviso al cliente |
+| **Endosos / anexos / cancelaciones** | `mod-cartera` | Cambio de auto, conductor, domicilio; historial |
+| **Comparativo PDF / propuesta** | `mod-cotizacion` | 3 opciones con logo de oficina |
+| **Recotización en 1 clic** | `mod-cotizacion` | Mismos datos del año pasado |
+| **Cross-sell / upsell** | `mod-cartera` | “Tiene auto, le falta hogar/GMM” |
+| **Cumpleaños y fechas clave** | `mod-agenda` + notificaciones | Relación y retención |
+| **Cartas / PDFs de cobro y renovación** | `mod-notificaciones` | Con marca del tenant |
+| **Metas y bonos** | `mod-identity` + CEO | Escalones sobre split interno |
+| **Distribución automática de leads** | `mod-cotizacion` | Round-robin / por ramo / por carga |
+| **Subagentes / promotores** | `mod-identity` + `mod-comisiones` | Red con % propios |
+| **Importar cartera Excel/CSV** | `mod-cartera` | Migración desde otro sistema |
+| **Checklist / firma de emisión** | `mod-cartera` | Docs listos antes de emitir |
+| **NPS / encuesta post-emisión** | `mod-notificaciones` | Calidad de atención |
+| **App / vista móvil agente** | `mod-portal-agente` + `mod-pwa` | Cotizar y ver cartera en calle |
 
-### Más adelante (escala / oficina grande)
+### 9.3 Más adelante (escala / oficina grande)
 
-| Idea | Para qué sirve |
-|------|----------------|
-| **Cotizador flotillas** | Empresas / varios vehículos |
-| **Gastos médicos (familia)** | Padecimientos, suma asegurada, parentescos |
-| **Vida y beneficiarios** | Gestión de designaciones |
-| **Contabilidad ligera** | Ingresos, egresos, utilidad por agente |
-| **Marketing**: landing + QR + tracking UTM | Origen del lead |
-| **Capacitación / library** | Materiales de aseguradoras, guías |
-| **API propia Segurod** | Que otras apps lean cartera / creen leads |
-| **White-label avanzado** | Dominio propio (cotiza.tuagencia.com), CSS completo |
-| **Integración Google Calendar / Outlook** | Sincronizar agenda |
-| **Pagos en línea al cliente** | Link de pago de prima (si hay pasarela + convenio) |
+| Idea | Módulo sugerido | Para qué sirve |
+|------|-----------------|----------------|
+| **Flotillas / colectivos** | `mod-cotizacion` + `mod-cartera` | Varios vehículos / grupos |
+| **GMM familiar / vida + beneficiarios** | `mod-cotizacion` + `mod-cartera` | Ramos con estructura familiar |
+| **Export contable** | `mod-comisiones` / `mod-sat` | CONTPAQi, QuickBooks, etc. |
+| **Sync / download portales cias.** | `mod-providers-api` | Cuando exista convenio técnico |
+| **Marketing**: landing, QR, UTM | Canal + cotización | Origen del lead |
+| **Biblioteca de capacitación** | `mod-config` | Materiales de aseguradoras |
+| **API propia Segurod** | Core | Que terceros lean cartera / creen leads |
+| **White-label avanzado (dominio propio)** | `mod-config` | cotiza.tuagencia.com |
+| **Google Calendar / Outlook** | `mod-agenda` | Sync de citas |
+| **Pagos en línea de prima** | `mod-cobranza` | Link de pago (pasarela + convenio) |
+| **ACORD / formas estándar** | `mod-cartera` | Más US; evaluar si aplica MX |
+| **BI avanzado / proyecciones** | `mod-portal-ceo` | Forecast de comisiones y cancelaciones |
+| **Contabilidad ligera** | Nuevo o integrar | Ingresos/egresos oficina |
 
-### Ideas de UX que suelen marcar diferencia
+### 9.4 UX que suelen marcar diferencia
 
-- **Hoy en un vistazo:** agenda del día + vencimientos + comisiones por facturar + leads nuevos  
-- **Ficha 360 del cliente:** chat, pólizas, docs, comisiones, tareas  
-- **Modo “solo móvil”** para agentes en calle  
+- **Hoy en un vistazo:** agenda + vencimientos + mora + comisiones por facturar + leads nuevos  
+- **Modo solo móvil** para agentes en calle  
 - **Botón “compartir portal”** al cliente por WhatsApp  
+- **Dashboard por rol** (vendedor ≠ admin ≠ CEO)
+
+### 9.5 Referencias de mercado (investigación)
+
+| Producto / categoría | Región / foco |
+|----------------------|---------------|
+| Softseguros, EFISeguros, Winsef, BrokerDO | LATAM — cartera, comisiones, siniestros |
+| Figuro, Foliume | MX/LATAM — CRM + cotización + WA |
+| segElevia (MPM) | Europa/ES — ERP corredurías, recibos, EIAC |
+| Applied Epic, AMS360, HawkSoft, EZLynx | US AMS — pólizas, accounting, carrier download |
+| AgencyBloc / NextAgency | US — life/health/benefits |
+
+*Al recortar alcance: empezar por §9.1 (cobranza + borderó + embudo + 360); el resto queda opcional.*
 
 ---
+
 
 ## 10. Alcance por fases (actualizado)
 
@@ -675,7 +700,10 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 - [x] Multi razón social + SAT (certificados CSD, PAC) en configuración  
 - [x] Comisiones por aseguradora + split interno por agente + panel CEO  
 - [x] Arquitectura por tipos de módulo (cambios aislados por módulo)  
+- [x] Backlog amplio de ideas ERP/AMS (candidatas a recortar)  
 - [ ] Validar país, ramos y figura legal  
+- [ ] **Recorte de alcance:** decidir qué del §9 entra al v1  
+  
 - [ ] Elegir partners de API  
 - [ ] Boceto UX: config + panel agente + panel CEO + portal cliente — **sin código**
 
