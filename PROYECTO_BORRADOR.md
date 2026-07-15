@@ -238,6 +238,10 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 | `mod-portal-cliente` | Portal cliente | Experiencia | UI asegurado: pólizas, vencimientos, docs | Tablas de comisión |
 | `mod-portal-ceo` | Panel CEO | Experiencia | Resúmenes y cortes por ramo/agente | Persistencia de pólizas (consume datos) |
 | `mod-billing-saas` | Billing Segurod | Core (fase 2+) | Suscripción, límites de plan | Comisiones de aseguradoras |
+| `mod-cobranza` | Recibos / cobranza | Dominio *(candidato §9)* | Recibos de prima, mora, remesas | Timbrado SAT |
+| `mod-siniestros` | Siniestros | Dominio *(candidato §9)* | Folios, estatus, docs de reclamo | Cotización API |
+
+*Detalle ampliado de cada módulo: §6.6.*
 
 ### 6.3 Reglas para editar sin romper otros módulos
 
@@ -295,6 +299,219 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 | Widget nuevo en panel CEO | `mod-portal-ceo` | Cartera (salvo lectura) |
 | Factura CFDI de comisión | `mod-comisiones` + `mod-sat` | Cotización |
 | Alta de otra razón social / CSD | `mod-sat` + `mod-config` | Cartera / WhatsApp |
+
+---
+
+
+### 6.6 Detalle por módulo
+
+Cada ficha: **para qué sirve**, **datos principales**, **funciones**, **depende de**, **publica (eventos/APIs)**, **pantallas típicas**.
+
+---
+
+#### Core / plataforma
+
+##### `mod-tenancy` — Tenancy SaaS
+- **Sirve para:** que cada oficina sea un cliente aislado del SaaS.
+- **Datos:** tenant_id, nombre, plan, estatus (trial/activo/suspendido), límites (usuarios, cotizaciones, WA), fecha alta.
+- **Funciones:** alta de oficina, suspender/reactivar, feature flags por plan, aislamiento de datos (`tenant_id` en todo).
+- **Depende de:** — (base)
+- **Publica:** `TenantCreado`, `PlanCambiado`, `FeatureFlagConsultada`
+- **Pantallas:** onboarding SaaS, billing (enlace a `mod-billing-saas`), admin plataforma Segurod (no del agente).
+
+##### `mod-identity` — Usuarios, roles y comisiones internas
+- **Sirve para:** quién entra al sistema y qué puede hacer; split de comisión del vendedor.
+- **Datos:** usuario, rol (CEO, admin, vendedor, asistente, cliente), permisos, sucursal, % comisión interna (global y/o por ramo), cartera asignada.
+- **Funciones:** invitar/desactivar usuarios, login, reset password, matriz de permisos, definir comisión interna por agente.
+- **Depende de:** `mod-tenancy`
+- **Publica:** `UsuarioCreado`, `PermisosCambiados`, `SplitComisionDefinido`
+- **Pantallas:** Config → Usuarios; mi perfil; login.
+
+##### `mod-config` — Configuración del tenant
+- **Sirve para:** marca, datos operativos y preferencias de la oficina.
+- **Datos:** logo, colores, nombre comercial, teléfonos, WhatsApp oficina, direcciones/sucursales, SMTP, toggles API globales, razones sociales (metadatos no-SAT), preferencias de alertas.
+- **Funciones:** editar identidad, direcciones, correo de envíos (test), multi razón social (alta de entidad), enlazar a SAT y a providers.
+- **Depende de:** `mod-tenancy`, `mod-identity` (quién puede editar)
+- **Publica:** `ConfigActualizada`, `RazonSocialCreada`
+- **Pantallas:** Configuración (identidad, correo, razones sociales, APIs).
+
+##### `mod-sat` — SAT / CFDI
+- **Sirve para:** timbrar y gestionar certificados por razón social.
+- **Datos:** razón social (RFC, régimen, domicilio fiscal), CSD (.cer/.key), vigencia, PAC, serie/folios, CFDIs emitidos/cancelados.
+- **Funciones:** cargar CSD cifrado, validar RFC vs certificado, alertar vencimiento CSD, timbrar, cancelar (fase 2), elegir emisor al facturar.
+- **Depende de:** `mod-config` (razones sociales), `mod-identity` (permisos)
+- **Publica:** `CsdCargado`, `CsdPorVencer`, `CfdiTimbrado`, `CfdiError`
+- **Pantallas:** Config → SAT / Certificados; selección de emisor al facturar comisión.
+- **No hace:** calcular comisiones ni guardar pólizas.
+
+##### `mod-audit` — Auditoría
+- **Sirve para:** trazabilidad de acciones sensibles.
+- **Datos:** log (actor, acción, entidad, antes/después opcional, IP, timestamp).
+- **Funciones:** registrar login fallido, cambios de permisos/config/SAT/comisiones/pólizas, exportaciones; consulta filtrable; retención.
+- **Depende de:** `mod-tenancy`, `mod-identity`
+- **Publica:** — (consume eventos o se llama explícitamente)
+- **Pantallas:** Config → Auditoría (CEO/admin).
+
+##### `mod-billing-saas` — Billing Segurod (fase 2+)
+- **Sirve para:** cobrar la suscripción del software (no comisiones de seguros).
+- **Datos:** plan, facturas SaaS, método de pago, uso vs límites.
+- **Funciones:** checkout, upgrade/downgrade, cortar por falta de pago.
+- **Depende de:** `mod-tenancy`
+- **Publica:** `SuscripcionVencida`, `LimiteAlcanzado`
+- **Pantallas:** Config → Plan / Facturación Segurod.
+
+---
+
+#### Dominio
+
+##### `mod-cotizacion` — Cotización y leads
+- **Sirve para:** captar riesgo, generar ofertas (manual/API/mixto) y pipeline comercial.
+- **Datos:** lead, cotización, versiones de oferta, token de enlace web, vigencia, origen (WA/web/manual), estatus (borrador…ganada/perdida), ramo/categoría.
+- **Funciones:** crear lead, cotizar, comparar ofertas, guardar PDF, convertir a póliza (llama cartera), embudo de etapas.
+- **Depende de:** `mod-providers-api` (si API ON), `mod-identity` (agente dueño), `mod-config` (toggles)
+- **Publica:** `LeadCreado`, `CotizacionCreada`, `CotizacionEnviada`, `CotizacionGanada`, `CotizacionPerdida`, `CotizacionVencida`
+- **Pantallas:** Cotizar (admin), lista de leads, detalle de cotización; usado por WA y web-quote.
+
+##### `mod-providers-api` — APIs / aseguradoras
+- **Sirve para:** conectar (o simular) compañías y tables de comisión que pagan a la oficina.
+- **Datos:** provider, credenciales (cifradas), ambiente sandbox/prod, toggle ON/OFF, catálogo productos, **% comisión aseguradora** por ramo/producto.
+- **Funciones:** adapters REST/SOAP, cotizar remoto, normalizar respuesta, fallback error → manual, CRUD tablas de comisión cia.
+- **Depende de:** `mod-config`, `mod-tenancy`
+- **Publica:** `ProviderCotizacionOk`, `ProviderCotizacionError`, `TablaComisionCiaActualizada`
+- **Pantallas:** Config → Aseguradoras / APIs / Comisiones de compañía.
+- **No hace:** split interno del vendedor (`mod-identity`) ni facturar (`mod-comisiones` + `mod-sat`).
+
+##### `mod-cartera` — Cartera (clientes y pólizas)
+- **Sirve para:** el archivo vivo de asegurados y pólizas.
+- **Datos:** cliente, contactos, documentos, póliza (número, cia, ramo, vigencia, prima, estatus), historial, asignación a agente; (backlog) endosos, recibos si no hay `mod-cobranza` aún.
+- **Funciones:** alta/edición cliente y póliza, import CSV, filtros por vencer/ramo/cia, ficha 360 (orquesta datos de otros módulos en UI), checklist docs.
+- **Depende de:** `mod-identity`, `mod-cotizacion` (al ganar), `mod-tenancy`
+- **Publica:** `ClienteCreado`, `PolizaCreada`, `PolizaActualizada`, `PolizaCancelada`, `DocumentoAtachado`
+- **Pantallas:** Cartera, ficha cliente, detalle póliza.
+- **No hace:** timbrar, enviar WhatsApp, calcular splits.
+
+##### `mod-agenda` — Agenda y tareas
+- **Sirve para:** tiempo del agente (citas y follow-ups).
+- **Datos:** evento, tarea, fecha/hora, ligado a lead/cliente/póliza, recordatorio.
+- **Funciones:** CRUD agenda día/semana, completar tarea, recordatorio interno.
+- **Depende de:** `mod-identity`, puede referenciar ids de cartera/cotización
+- **Publica:** `CitaCreada`, `TareaVencida`, `TareaCompletada`
+- **Pantallas:** Agenda; widget “Hoy”.
+
+##### `mod-comisiones` — Comisiones y facturación a cias.
+- **Sirve para:** dinero que la oficina gana / factura / cobra de aseguradoras y lo que debe a vendedores.
+- **Datos:** movimiento de comisión, capa (cia→oficina / oficina→agente), estados (por facturar, facturada, por pagar, pagada, disputa), factura ligada, borderó cargado (backlog).
+- **Funciones:** generar comisión al cerrar (lee % cia + split usuario), flujo de factura a cia (pide timbrar a `mod-sat`), conciliar pago, liquidar agente; (backlog) conciliar planilla.
+- **Depende de:** `mod-providers-api` (tablas %), `mod-identity` (split), `mod-cartera`/`mod-cotizacion` (origen), `mod-sat` (CFDI)
+- **Publica:** `ComisionGenerada`, `ComisionFacturada`, `ComisionPagada`, `DisputaAbierta`
+- **Pantallas:** Comisiones, pendientes, facturar, liquidaciones.
+
+##### `mod-renovaciones` — Vencimientos y renovaciones
+- **Sirve para:** no perder cartera por olvido.
+- **Datos:** reglas (45/30/15/7), cola de renovación, % retención (cálculo), opt-out.
+- **Funciones:** job que detecta por vencer, crea tareas de agenda, dispara eventos de aviso, tablero de renovaciones.
+- **Depende de:** `mod-cartera` (vigencias), `mod-agenda`, `mod-notificaciones` (vía eventos)
+- **Publica:** `PolizaPorVencer`, `RenovacionIniciada`, `RenovacionGanada`, `RenovacionPerdida`
+- **Pantallas:** Cola renovaciones; config de reglas.
+
+##### `mod-cobranza` — Recibos y cobranza *(backlog §9 — módulo candidato)*
+- **Sirve para:** recibos de prima, mora, remesas a cia.
+- **Datos:** recibo, fecha cobro, estatus, monto, forma de pago, remesa.
+- **Depende de:** `mod-cartera`
+- **Publica:** `ReciboVencido`, `PagoRegistrado`, `RemesaGenerada`
+
+##### `mod-siniestros` — Siniestros *(backlog §9 — módulo candidato)*
+- **Sirve para:** mesa ligera de reportes.
+- **Datos:** siniestro, folio, estatus, montos, docs, fechas.
+- **Depende de:** `mod-cartera`
+- **Publica:** `SiniestroAbierto`, `SiniestroActualizado`, `SiniestroCerrado`
+
+---
+
+#### Canales
+
+##### `mod-whatsapp` — WhatsApp
+- **Sirve para:** conversación y entrega de mensajes/enlaces (no tarifica).
+- **Datos:** hilos, mensajes, plantillas Meta, asignación a agente, phone_number_id, BSP/Cloud config por tenant.
+- **Funciones:** webhook, menú/flujo, enviar enlace de cotización, bandeja multiagente (backlog), reenviar alertas WA.
+- **Depende de:** `mod-cotizacion` (para cotizar), `mod-identity`, `mod-notificaciones` (puede ser canal de salida)
+- **Publica:** `MensajeWaRecibido`, `MensajeWaEnviado`, `SesionWaAbierta`
+- **Pantallas:** Bandeja WA; Config → WhatsApp.
+
+##### `mod-web-quote` — Cotizador web móvil
+- **Sirve para:** wizard público / por token en el celular.
+- **Datos:** sesión de wizard (puede ser la misma cotización).
+- **Funciones:** pasos del formulario, mostrar ofertas, CTA contratar/asesor.
+- **Depende de:** `mod-cotizacion`, `mod-config` (logo/marca)
+- **Publica:** usa eventos de cotización
+- **Pantallas:** `/c/{token}`, landing cotizar.
+
+##### `mod-pwa` — PWA e instalación
+- **Sirve para:** instalar en inicio iOS/Android y cablear Web Push.
+- **Datos:** suscripciones push, manifest, service worker.
+- **Funciones:** prompt “Agregar a inicio”, pedir permiso notificaciones, entregar push al SO.
+- **Depende de:** `mod-notificaciones` (contenido), portales
+- **Publica:** `PushSubscriptionCreada`, `PushPermissionDenied`
+- **Pantallas:** banner de instalación en portales.
+
+---
+
+#### Comunicaciones
+
+##### `mod-notificaciones` — Notificaciones y alertas
+- **Sirve para:** decidir *qué* avisar y por qué canal; no dueña del negocio.
+- **Datos:** reglas de alerta (tipo, destinatario, antelación, canales), plantillas email/push/WA, cola de envíos, centro in-app.
+- **Funciones:** suscribirse a eventos (`PolizaPorVencer`, `LeadCreado`…), fan-out a email/push/WA, opt-out, config por tenant.
+- **Depende de:** `mod-config` (SMTP), `mod-pwa` (push), `mod-whatsapp` (opcional), `mod-identity` (destinatarios)
+- **Publica:** `NotificacionEnviada`, `NotificacionFallida`
+- **Pantallas:** Config → Alertas; campana in-app en portales.
+
+---
+
+#### Experiencia (UI)
+
+##### `mod-portal-agente` — Portal administrativo
+- **Sirve para:** UI diaria del vendedor/admin (capa fina).
+- **Orquesta:** cotización, cartera, agenda, comisiones, WA, notificaciones.
+- **Funciones UI:** Hoy, leads, cartera, agenda, comisiones (según permiso), config (admin).
+- **No calcula** primas ni comisiones; llama a módulos de dominio.
+- **Pantallas:** shell del panel admin / PWA agente.
+
+##### `mod-portal-cliente` — Portal del asegurado
+- **Sirve para:** que el cliente vea pólizas, vencimientos, docs y pida renovar.
+- **Orquesta:** `mod-cartera` (lectura), `mod-renovaciones`, `mod-notificaciones`, `mod-pwa`.
+- **No ve** comisiones ni panel CEO.
+- **Pantallas:** login cliente, home pólizas, detalle, notificaciones.
+
+##### `mod-portal-ceo` — Panel ejecutivo
+- **Sirve para:** resúmenes de toda la oficina.
+- **Orquesta lecturas de:** cotización, cartera, comisiones, renovaciones (por ramo, agente, cia, periodo).
+- **Funciones UI:** KPIs, drill-down por categoría (auto, casa, vida, GMM…), exportación.
+- **No escribe** pólizas; solo consulta agregada.
+- **Pantallas:** Dashboard CEO.
+
+---
+
+### 6.7 Mapa rápido “¿dónde va mi feature?”
+
+| Si el cambio es… | Módulo |
+|------------------|--------|
+| Logo, SMTP, sucursales | `mod-config` |
+| CSD, RFC, timbrar | `mod-sat` |
+| Rol o % del vendedor | `mod-identity` |
+| Cotizar / lead / embudo | `mod-cotizacion` |
+| Adapter Quálitas / % cia | `mod-providers-api` |
+| Póliza / cliente / docs | `mod-cartera` |
+| Cita o “llamar mañana” | `mod-agenda` |
+| Por facturar / CFDI comisión | `mod-comisiones` (+ `mod-sat`) |
+| Aviso 30 días antes | `mod-renovaciones` → evento → `mod-notificaciones` |
+| Texto del push / plantilla | `mod-notificaciones` |
+| Instalar en iPhone | `mod-pwa` |
+| Menú del bot WA | `mod-whatsapp` |
+| Wizard del celular | `mod-web-quote` |
+| Pantalla del CEO | `mod-portal-ceo` |
+| Recibo de prima / mora | `mod-cobranza` (candidato) |
+| Folio de siniestro | `mod-siniestros` (candidato) |
 
 ---
 
