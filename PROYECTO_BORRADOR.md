@@ -221,7 +221,8 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 |----|--------|------|-----------------------------|---------------------------|
 | `mod-tenancy` | Tenancy SaaS | Core | Alta de oficina, aislamiento de datos, plan | UI de cotizar |
 | `mod-identity` | Usuarios y permisos | Core | Roles, vendedores, splits internos de comisión | Cálculo de prima |
-| `mod-config` | Configuración tenant | Core | Logo, datos empresa, direcciones, SMTP, toggles API | Emisión de pólizas |
+| `mod-config` | Configuración tenant | Core | Logo, datos, direcciones, SMTP, toggles API, multi razón social | Emisión de pólizas |
+| `mod-sat` | SAT / CFDI | Core | Certificados (CSD), FIEL opcional, PAC, multi RFC | Cotización / WhatsApp |
 | `mod-audit` | Auditoría | Core | Bitácora quién/qué/cuándo | Reglas de negocio |
 | `mod-cotizacion` | Cotización | Dominio | Cotizar manual/API/mixto, leads, vigencia, tokens | Agenda o portal |
 | `mod-providers-api` | APIs aseguradoras | Integración | Adapters, sandbox/prod, tablas % comisión cia. | Split interno agente |
@@ -292,7 +293,8 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 | Nuevo % comisión Quálitas | `mod-providers-api` | Usuarios |
 | Nuevo split de un vendedor | `mod-identity` | Providers |
 | Widget nuevo en panel CEO | `mod-portal-ceo` | Cartera (salvo lectura) |
-| Factura CFDI de comisión | `mod-comisiones` | Cotización |
+| Factura CFDI de comisión | `mod-comisiones` + `mod-sat` | Cotización |
+| Alta de otra razón social / CSD | `mod-sat` + `mod-config` | Cartera / WhatsApp |
 
 ---
 
@@ -346,14 +348,55 @@ Segurod se vende por **suscripción** (SaaS). Cada cliente (oficina, broker o ag
 
 #### Identidad y marca
 - Logo de la empresa (cotizador, portal cliente, PDFs, correos)
-- Nombre comercial / razón social
+- Nombre comercial (marca visible al cliente)
 - Colores básicos (opcional, white-label ligero)
-- Datos del agente o de la empresa de seguros (RFC, cédula, clave de agente global si aplica)
+- Datos del agente o de la empresa de seguros (cédula, clave de agente global si aplica)
+- **Multi razón social:** un tenant puede operar con **varias razones sociales / RFCs** (ver bloque SAT abajo)
+
+#### Multi razón social (requerido)
+Cada razón social es una entidad fiscal independiente dentro del mismo tenant (oficina):
+
+| Campo | Ejemplo |
+|-------|---------|
+| Razón social | Agentes del Norte SA de CV |
+| RFC | ADN850101XXX |
+| Régimen fiscal | 601, 612, etc. |
+| Domicilio fiscal | Calle, CP, colonia… |
+| Logo opcional | Si factura con otra marca |
+| Uso | Facturar comisiones / documentos / “razón por defecto” |
+
+Reglas:
+- Alta, edición y baja (soft) de N razones sociales  
+- Una marcada como **predeterminada**  
+- Al facturar comisión (u otro CFDI) se **elige la razón social** emisora  
+- Usuarios pueden restringirse a una o varias razones (opcional)  
+- Reportes CEO filtrables por razón social  
+
+#### SAT — certificados y facturación (requerido)
+Módulo de configuración fiscal México (`mod-sat`), por cada razón social:
+
+**Certificados**
+- Carga de **CSD** (Certificado de Sello Digital): `.cer` + `.key` + contraseña  
+- Validación de vigencia (fecha inicio / fin) y RFC del certificado vs razón social  
+- Alerta de certificado por vencer (push/email al admin)  
+- Almacenamiento cifrado; solo admin/CEO puede ver/cargar  
+- (Opcional) FIEL solo si el flujo lo requiere — no confundir con CSD de timbrado  
+
+**PAC / timbrado**
+- Proveedor PAC (Facturama, Finkok, etc.) o “solo registro sin timbrar”  
+- Credenciales de prueba / producción  
+- Serie y folios (si aplica)  
+- Producto/servicio SAT para comisiones de intermediación (clave prod/serv configurable)  
+
+**Operación**
+- Probar timbrado (CFDI de prueba)  
+- Ver últimos CFDI emitidos por razón social  
+- Cancelación de CFDI (flujo SAT) — fase posterior si no entra en MVP  
 
 #### Datos de contacto y direcciones
 - Teléfonos, WhatsApp de la oficina, sitio web
 - Correo de contacto visible al cliente
-- Direcciones (matriz, sucursales) — una o varias
+- Direcciones (matriz, sucursales) — una o varias (operativas; el domicilio fiscal va en cada razón social)
 - Horarios de atención (opcional)
 
 #### Correo para envíos
@@ -541,11 +584,12 @@ Vistas:
 
 ### 8.5 Facturación de comisiones a aseguradoras
 
-- Alta de aseguradoras / promotorías como “clientes a facturar”  
-- Generar o registrar factura (factura + folio CFDI si el negocio lo requiere)  
+- Alta de aseguradoras / promotorías como “clientes a facturar” (RFC receptor)  
+- Elegir **razón social emisora** (multi razón social + certificados SAT)  
+- Generar CFDI con CSD/PAC configurados, o registrar factura externa  
 - Adjuntar soporte (estado de cuenta, producción del mes)  
 - Marcar envío y seguimiento de pago  
-- Nota: la timbrado CFDI puede ser nativo o vía proveedor (Facturama, etc.) — decidir en implementación
+- Timbrado vía `mod-sat` (PAC); comisiones no guardan certificados fuera de ese módulo
 
 ### 8.6 Portal del cliente
 
@@ -628,6 +672,7 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 - [x] Modos manual / API / mixto con toggles (activar al tener sandbox)  
 - [x] Definir módulo agente: agenda, comisiones, cartera, recordatorios, portal  
 - [x] Modelo SaaS: config (logo, datos, correo, usuarios, permisos, auditoría, respaldos)  
+- [x] Multi razón social + SAT (certificados CSD, PAC) en configuración  
 - [x] Comisiones por aseguradora + split interno por agente + panel CEO  
 - [x] Arquitectura por tipos de módulo (cambios aislados por módulo)  
 - [ ] Validar país, ramos y figura legal  
@@ -638,6 +683,8 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 
 - Alta de tenant (oficina) + login  
 - **Configuración:** logo, datos empresa/agente, direcciones, correo de envíos  
+- Alta de **razones sociales** (aunque timbrado venga después)  
+- Placeholder **SAT / CSD** (carga de certificados cuando se active CFDI)  
 - Usuarios vendedor + roles/permisos básicos + auditoría de login/cambios clave  
 - Tablas simples de **% comisión por aseguradora** (aunque sea alta manual)  
 - **% comisión interna** por usuario  
@@ -687,7 +734,8 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 5. **WhatsApp:** Cloud API directa o BSP; ¿un número por tenant?  
 6. **Provider API:** Dora / Inter Connect / Bruno / Surexs / directo  
 6b. **Cotización:** arrancar 100 % manual; ¿quién activa toggles API? (dueño/admin)  
-7. **Comisiones:** ¿solo registro interno o también **timbrado CFDI** desde día 1?  
+7. **Comisiones / CFDI:** ¿registro interno primero o **timbrado SAT** desde día 1?  
+7b. **PAC preferido** y si cada tenant trae su CSD (sí, por diseño multi razón social)  
 8. **Correo de envíos:** ¿SMTP del cliente o correo gestionado por Segurod?  
 9. **Respaldos:** ¿restore self-service o solo vía soporte?  
 10. **Cartera inicial:** ¿alta manual, import Excel, o sync con aseguradoras?  
@@ -705,7 +753,10 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 | Abandono en WhatsApp | Enlace web temprano |
 | Datos personales | Aviso de privacidad, consentimiento WA/web/portal |
 | Expectativa de precio “oficial” | Etiquetar estimado vs tarifa real |
-| CFDI / factura mal diseñada | Empezar con “registro de factura” y enlazar PAC después |
+| CFDI / factura mal diseñada | Empezar con razones sociales + registro; enlazar CSD/PAC después |
+| Certificados SAT filtrados | Cifrado en reposo; acceso solo admin/CEO; nunca en logs |
+| CSD vencido | Alertas de vigencia; bloquear timbrado con aviso claro |
+| Facturar con RFC incorrecto | Obligar elección de razón social emisora al emitir CFDI |
 | Recordatorios molestos | Reglas claras + opt-out + tope por póliza |
 | Portal sin adopción | Activarlo al emitir / renovar y mandar link por WA |
 | Push en iPhone sin instalar | Guiar a “Agregar a inicio”; sin PWA instalada el push es limitado |
@@ -722,10 +773,12 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 2. Matriz de APIs / partners (sección 5)  
 3. Mapa de flujos WhatsApp, web, renovación y comisiones  
 4. Configuración SaaS + módulo agente + backlog (secciones 8, 8A y 9)  
-5. Decisiones abiertas (sección 11)
+5. Catálogo y reglas de módulos (sección 6)  
+6. Decisiones abiertas (sección 11)
 
 **Próximo paso sugerido (sin programar):**  
-Boceto de **Configuración del tenant** (logo, usuarios, correo) → MVP panel → portal cliente → contacto API.
+Boceto de **Configuración del tenant** (logo, usuarios, correo) → MVP panel → portal cliente → contacto API.  
+Al diseñar/programar: etiquetar cada pantalla o feature con su `mod-*`.
 
 ---
 
