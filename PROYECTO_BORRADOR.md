@@ -17,6 +17,8 @@ Construir **Segurod** como plataforma para agentes/brokers con dos caras:
 
 Cotización **completa**: datos del riesgo → comparación multi-aseguradora → oferta → lead / emisión → seguimiento.
 
+**Modos de cotización (requerimiento):** cada oficina/agente puede operar en **manual**, **API**, o **mixto**, y **activar/desactivar** la API por aseguradora o en global mientras obtiene credenciales, sandbox y homologación.
+
 ### B) Operación del agente (retención y administración)
 
 Herramientas diarias del intermediario en un solo sistema:
@@ -121,6 +123,37 @@ El enlace puede venir de WhatsApp con **token de sesión** para prellenar lo ya 
 - Entrega de póliza  
 - Renovación y siniestros (fuera del MVP)
 
+### 4.4 Modos de cotización: manual / API / mixto
+
+El sistema **no depende** de tener API el día 1. El agente (o admin de oficina) configura el modo:
+
+| Modo | Qué hace |
+|------|----------|
+| **Manual** | Captura datos del riesgo; el agente carga prima/coberturas a mano o marca “pendiente de cotizar”; puede adjuntar PDF de la aseguradora |
+| **API** | Cotiza en automático contra el provider (agregador o aseguradora) |
+| **Mixto** | Unas compañías por API y otras manuales (lo más realista al ir activando credenciales) |
+
+**Interruptor (toggle) en configuración:**
+
+- Activar / desactivar **API global** (mientras no haya sandbox/credenciales → queda solo manual)  
+- Activar / desactivar **por aseguradora / provider** (ej. Quálitas ON vía API, GNP OFF → solo manual)  
+- Ambiente: `sandbox` | `producción` (cuando aplique)  
+- Si la API falla o está apagada → el flujo **no se rompe**: cae a manual o “enviar a agente”
+
+**Flujo típico mientras se consiguen accesos:**
+
+1. Arranque: todo en **manual** (WhatsApp/web capturan lead completo).  
+2. Llega sandbox de un partner → se prueba con toggle en **sandbox** (solo admin).  
+3. Homologación OK → se enciende esa compañía en **producción**.  
+4. El resto sigue manual hasta tener clave/API.
+
+**Datos mínimos en cotización manual:**
+
+- Mismos datos de entrada del asegurado/riesgo  
+- Aseguradora, paquete, prima, deducible, vigencia de la oferta  
+- Origen: “capturada por agente” / “PDF importado”  
+- Estatus: borrador · enviada al cliente · ganada · perdida · vencida
+
 ---
 
 ## 5. Investigación: APIs con aseguradoras
@@ -146,9 +179,9 @@ Las APIs públicas gratuitas y abiertas de las grandes aseguradoras **no son la 
 
 **Recomendación de borrador:**
 
-- **Fase 0:** motor mock + captura completa de lead (WhatsApp + web).  
-- **Fase 1:** integrar **un agregador** con API REST documentada (OpenAPI).  
-- **Fase 2:** sumar conexiones directas solo donde el gancho comercial y el volumen lo justifiquen.
+- **Día 1:** cotización **manual** + captura completa (WhatsApp + web); API apagada por toggle.  
+- **Cuando haya sandbox:** encender un provider en modo prueba sin afectar producción.  
+- **Después:** modo mixto (API ON por compañía) y sumar conexiones según credenciales reales.
 
 ### 5.3 Criterios para elegir partner de API
 
@@ -182,17 +215,18 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
         └────────┬───────┘
                  ▼
         ┌────────────────┐
-        │ Quote Engine   │  orquesta providers
+        │ Quote Engine   │  según: manual | API | mixto
         └────────┬───────┘
-     ┌───────────┼───────────┐
-     ▼           ▼           ▼
- Provider A   Provider B   Mock (dev)
- (agregador)  (aseguradora) 
+     ┌───────────┼──────────────┐
+     ▼           ▼              ▼
+ Manual      Provider A     Provider B
+ (agente)   (si toggle ON) (si toggle ON)
                  │
                  ▼
         ┌────────────────────────────────────────────┐
         │           Panel agente (CRM)               │
         │  agenda · cartera · comisiones · leads     │
+        │  config: toggles API / sandbox / prod      │
         └───────────────────┬────────────────────────┘
                             │
               ┌─────────────┴─────────────┐
@@ -207,9 +241,10 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 |--------|-----------------|
 | Canal WhatsApp | Webhook, menús, enlace, resumen de ofertas, recordatorios |
 | Cotizador web | Wizard móvil, comparador, detalle |
-| Quote Engine | Normaliza request/response entre providers |
-| Adapters | Un adapter por agregador/aseguradora |
-| Leads & cotizaciones | Persistencia, vigencia, token de enlace |
+| Quote Engine | Enruta cotización a **manual** o **API** según toggles |
+| Adapters | Un adapter por agregador/aseguradora (se encienden cuando hay credenciales) |
+| Config de providers | Toggles ON/OFF, sandbox/prod, claves encriptadas |
+| Leads & cotizaciones | Persistencia, vigencia, token; origen manual o API |
 | Agenda | Citas, seguimientos, tareas del día |
 | Cartera | Clientes, pólizas, ramos, aseguradoras, estatus |
 | Comisiones | Por facturar, facturadas, por pagar, pagadas |
@@ -388,6 +423,7 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 
 - [x] Definir canales y cotización completa  
 - [x] Investigar APIs  
+- [x] Modos manual / API / mixto con toggles (activar al tener sandbox)  
 - [x] Definir módulo agente: agenda, comisiones, cartera, recordatorios, portal  
 - [ ] Validar país, ramos y figura legal  
 - [ ] Elegir partners de API  
@@ -395,7 +431,9 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 
 ### Fase 1 — MVP cotización + leads
 
-- WhatsApp + web cotizador (mock ok)  
+- WhatsApp + web: captura completa  
+- Cotización **manual** operativa desde el día 1  
+- Toggles: API global OFF; providers OFF (listos para encender después)  
 - Panel: leads y asignación básica  
 - Ficha mínima de cliente
 
@@ -406,9 +444,11 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 - Recordatorios de vencimiento (email y/o WhatsApp)  
 - Portal cliente básico (pólizas + vencimientos)
 
-### Fase 3 — Cotización real + comisiones
+### Fase 3 — API opcional + comisiones
 
-- API aseguradora / agregador en productivo  
+- Adapter(s) detrás de toggle (sandbox → producción)  
+- Modo **mixto**: compañías con API ON + resto manual  
+- Fallback a manual si API off o error  
 - Módulo comisiones (por facturar / por pagar / pagadas)  
 - Facturación a aseguradoras (registro + adjuntos; CFDI según decisión)  
 - Tablero renovaciones
@@ -431,6 +471,7 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 4. **Emisión:** ¿solo cotizar + lead, o cotizar y emitir?  
 5. **WhatsApp:** Cloud API directa o BSP  
 6. **Provider API:** Dora / Inter Connect / Bruno / Surexs / directo  
+6b. **Cotización:** arrancar 100 % manual; ¿quién puede activar toggles API? (solo admin / también agente)  
 7. **Comisiones:** ¿solo registro interno o también **timbrado CFDI** desde día 1?  
 8. **Portal cliente:** ¿marca Segurod o marca de cada oficina (white-label)?  
 9. **Cartera inicial:** ¿alta manual, import Excel, o sync con aseguradoras?  
@@ -443,7 +484,7 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 
 | Riesgo | Mitigación |
 |--------|------------|
-| Sin convenio API al lanzar | Lead + mock; cartera y agenda sí aportan valor sin API |
+| Sin convenio API al lanzar | Cotización manual + toggles OFF; cartera/agenda sí aportan valor |
 | Tarifas distintas a las del agente | BYOR si el partner lo permite |
 | Abandono en WhatsApp | Enlace web temprano |
 | Datos personales | Aviso de privacidad, consentimiento WA/web/portal |
