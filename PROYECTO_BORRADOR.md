@@ -253,7 +253,10 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 | Portal del cliente | Login cliente: pólizas, vencimientos, documentos |
 | Tenancy SaaS | Cada oficina = tenant (datos y config aislados) |
 | Configuración del tenant | Logo, datos empresa/agente, direcciones, correo, APIs, respaldos |
-| Usuarios y permisos | Dueño, admin, vendedor, asistente (+ cliente en portal) |
+| Tablas de comisión aseguradora | % por compañía / ramo / producto |
+| Comisiones internas | Split por usuario/agente |
+| Usuarios y permisos | CEO/dueño, admin, vendedor, asistente (+ cliente) |
+| Panel CEO | Resúmenes globales y por categoría/ramo |
 | Auditoría | Log de acciones (quién hizo qué y cuándo) |
 
 ---
@@ -290,11 +293,13 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 
 ### Flujo E — Comisión del agente
 
-1. Póliza emitida / pagada → genera **comisión por facturar**  
-2. Agente (o backoffice) factura a la aseguradora / promotoría  
-3. Pasa a **facturada / pendiente de pago**  
-4. Al conciliar pago → **pagada**  
-5. Reportes por aseguradora, periodo y agente
+1. Póliza emitida / pagada → calcula comisión con **tabla de la aseguradora**  
+2. Aplica **split interno** del vendedor vs oficina  
+3. Genera **comisión por facturar** (oficina → aseguradora)  
+4. Factura a la aseguradora / promotoría  
+5. Pasa a **facturada / pendiente de pago** → al conciliar → **pagada**  
+6. Comisión interna del vendedor queda pendiente/pagada según reglas de la oficina  
+7. Todo alimenta reportes y **panel CEO** (por ramo, agente, compañía)
 
 ---
 
@@ -520,7 +525,7 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 | **Recotización en 1 clic** | Renovar con mismos datos del año pasado |
 | **Endosos y movimientos** | Cambio de auto, alta de conductor, domicilio |
 | **Siniestros (mesa ligera)** | Alta de reporte, folios, seguimiento, documentos |
-| **Metas y comisiones internas** | Split entre agente y oficina / promotor |
+| **Metas y bonos** | Escalones sobre el split interno ya definido en usuarios |
 | **App móvil del agente** | Agenda + cartera + cotizar en campo |
 | **Importar cartera** | Excel / CSV desde otras oficinas o portales |
 | **Estados de cuenta vs aseguradora** | Conciliación automática o semi (cargar Excel de la cia.) |
@@ -560,20 +565,24 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 - [x] Modos manual / API / mixto con toggles (activar al tener sandbox)  
 - [x] Definir módulo agente: agenda, comisiones, cartera, recordatorios, portal  
 - [x] Modelo SaaS: config (logo, datos, correo, usuarios, permisos, auditoría, respaldos)  
+- [x] Comisiones por aseguradora + split interno por agente + panel CEO  
 - [ ] Validar país, ramos y figura legal  
 - [ ] Elegir partners de API  
-- [ ] Boceto UX: config tenant + panel agente + portal cliente — **sin código**
+- [ ] Boceto UX: config + panel agente + panel CEO + portal cliente — **sin código**
 
 ### Fase 1 — MVP SaaS + cotización + leads
 
 - Alta de tenant (oficina) + login  
 - **Configuración:** logo, datos empresa/agente, direcciones, correo de envíos  
 - Usuarios vendedor + roles/permisos básicos + auditoría de login/cambios clave  
+- Tablas simples de **% comisión por aseguradora** (aunque sea alta manual)  
+- **% comisión interna** por usuario  
 - WhatsApp + web: captura completa  
 - Cotización **manual** operativa desde el día 1  
 - Toggles API OFF (listos para encender después)  
 - Panel: leads y asignación básica  
-- Ficha mínima de cliente
+- Ficha mínima de cliente  
+- **Panel CEO** básico: cotizaciones creadas, cerradas, por ramo (aunque solo auto al inicio)
 
 ### Fase 2 — Cartera y agenda
 
