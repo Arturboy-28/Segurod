@@ -1,21 +1,37 @@
 # Segurod — Borrador de proyecto
 
 **Estado:** borrador / discovery  
-**Alcance de este documento:** definición del producto, canales, integración con aseguradoras y plan de implementación.  
+**Alcance de este documento:** definición del producto (cotización + operaciones del agente + portal del cliente), canales, integración con aseguradoras y plan de implementación.  
 **Fuera de alcance ahora:** código, infraestructura en producción, contratos con aseguradoras.
 
 ---
 
 ## 1. Objetivo
 
-Construir un **sistema cotizador de seguros** que permita al cliente:
+Construir **Segurod** como plataforma para agentes/brokers con dos caras:
+
+### A) Cotización (adquisición)
 
 1. **Cotizar por WhatsApp** (conversación guiada), o  
-2. **Recibir un enlace web** y completar la cotización desde el celular (flujo responsive).
+2. **Recibir un enlace web** y completar la cotización desde el celular.
 
-La cotización debe ser **completa**: datos del riesgo/asegurado → comparación multi-aseguradora → oferta clara → captura de lead / solicitud de emisión → seguimiento.
+Cotización **completa**: datos del riesgo → comparación multi-aseguradora → oferta → lead / emisión → seguimiento.
 
-**Hipótesis de mercado inicial:** México, ramo **auto** (mayor madurez de APIs y demanda). Expansión posterior a moto, hogar, GMM y vida.
+### B) Operación del agente (retención y administración)
+
+Herramientas diarias del intermediario en un solo sistema:
+
+- Agenda  
+- Facturación de comisiones a aseguradoras  
+- Comisiones pendientes por facturar  
+- Comisiones pendientes de pago  
+- Cartera de clientes  
+- Recordatorios automáticos de vencimiento  
+- Portal del cliente (pólizas y vencimientos)
+
+**Hipótesis de mercado inicial:** México, ramo **auto** (mayor madurez de APIs). Expansión a moto, hogar, GMM y vida.
+
+**Nombre de producto de trabajo:** Segurod (ajustable).
 
 ---
 
@@ -23,12 +39,13 @@ La cotización debe ser **completa**: datos del riesgo/asegurado → comparació
 
 | Para el cliente | Para el agente / broker |
 |-----------------|-------------------------|
-| Cotiza en minutos sin llamada ni apps | Un solo flujo WhatsApp + web |
-| Compara varias aseguradoras | Lead estructurado y trazable |
-| Enlace móvil si prefiere “llenar” | Menos fricción, más cierre |
-| Transparencia de coberturas y precio | Base para emisión y postventa |
+| Cotiza en minutos (WA o web móvil) | Cotiza y cierra desde un solo panel |
+| Ve sus pólizas y vencimientos en portal | Cartera ordenada, no en Excel |
+| Recibe recordatorios a tiempo | Menos pólizas que se van por olvido |
+| Habla con su agente sin perder historial | Agenda + seguimiento de leads |
+| Transparencia de coberturas y precio | Control de comisiones: por facturar / por cobrar |
 
-**Nombre de producto de trabajo:** Segurod (ajustable).
+En una frase: **cotizar + administrar cartera + cobrar comisiones + servir al cliente.**
 
 ---
 
@@ -173,22 +190,33 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
  (agregador)  (aseguradora) 
                  │
                  ▼
-        ┌────────────────┐
-        │  CRM / Panel   │  agentes, seguimiento
-        └────────────────┘
+        ┌────────────────────────────────────────────┐
+        │           Panel agente (CRM)               │
+        │  agenda · cartera · comisiones · leads     │
+        └───────────────────┬────────────────────────┘
+                            │
+              ┌─────────────┴─────────────┐
+              ▼                           ▼
+     Portal del cliente            Motor de avisos
+     (pólizas / vencimientos)      (WhatsApp / email / push)
 ```
 
 **Componentes conceptuales (sin implementación aún):**
 
 | Módulo | Responsabilidad |
 |--------|-----------------|
-| Canal WhatsApp | Webhook, menús, envío de enlace, resumen de ofertas |
+| Canal WhatsApp | Webhook, menús, enlace, resumen de ofertas, recordatorios |
 | Cotizador web | Wizard móvil, comparador, detalle |
 | Quote Engine | Normaliza request/response entre providers |
 | Adapters | Un adapter por agregador/aseguradora |
 | Leads & cotizaciones | Persistencia, vigencia, token de enlace |
-| Panel agente | Ver leads, retomar chat, asignación |
-| Auth / roles | Admin, agente, (futuro) cliente |
+| Agenda | Citas, seguimientos, tareas del día |
+| Cartera | Clientes, pólizas, ramos, aseguradoras, estatus |
+| Comisiones | Por facturar, facturadas, por pagar, pagadas |
+| Facturación a aseguradoras | Generar / registrar factura de comisión (CFDI si aplica) |
+| Recordatorios | Vencimientos y renovaciones automáticas |
+| Portal del cliente | Login cliente: pólizas, vencimientos, documentos |
+| Auth / roles | Admin oficina, agente, asistente, cliente |
 
 ---
 
@@ -214,81 +242,236 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 1. Landing corta → entra al wizard  
 2. Al guardar/contratar, opción “Recibir en WhatsApp”
 
+### Flujo D — Vencimiento / renovación (cartera)
+
+1. Sistema detecta póliza por vencer (ej. 45 / 30 / 15 / 7 días)  
+2. Aviso automático al cliente (WhatsApp / email / portal)  
+3. Tarea en agenda del agente  
+4. Cliente o agente inicia recotización / renovación  
+5. Se actualiza cartera y comisiones al emitir
+
+### Flujo E — Comisión del agente
+
+1. Póliza emitida / pagada → genera **comisión por facturar**  
+2. Agente (o backoffice) factura a la aseguradora / promotoría  
+3. Pasa a **facturada / pendiente de pago**  
+4. Al conciliar pago → **pagada**  
+5. Reportes por aseguradora, periodo y agente
+
 ---
 
-## 8. Alcance por fases
+## 8. Módulo agente — alcance confirmado
 
-### Fase 0 — Validación (este borrador)
+Funciones que **sí entran** en el producto (definidas en discovery):
+
+### 8.1 Agenda
+
+- Citas con prospectos y clientes  
+- Seguimientos (“llamar mañana”, “enviar cotización”)  
+- Vista día / semana  
+- Ligada a lead, cliente o póliza  
+- Recordatorio interno al agente (y opcional WhatsApp)
+
+### 8.2 Cartera de clientes
+
+- Ficha del cliente (datos, contactos, documentos)  
+- Pólizas: aseguradora, ramo, número, vigencia, prima, estatus  
+- Historial de cotizaciones y renovaciones  
+- Búsqueda y filtros (por vencer, cancelada, ramo, compañía)  
+- Asignación a agente (oficinas con varios asesores)
+
+### 8.3 Recordatorios automáticos de vencimiento
+
+- Reglas configurables (ej. 45-30-15-7 días)  
+- Canales: WhatsApp, email, notificación en portal  
+- Cola de renovaciones del día para el agente  
+- Evitar spam: una secuencia por póliza + opt-out
+
+### 8.4 Comisiones
+
+Estados mínimos:
+
+| Estado | Significado |
+|--------|-------------|
+| Pendiente por facturar | Ya se ganó / está lista para facturar a la aseguradora |
+| Facturada / pendiente de pago | Ya se envió factura; se espera depósito |
+| Pagada | Conciliada |
+| En disputa / ajuste | Diferencia con estado de cuenta |
+
+Vistas:
+
+- Por aseguradora  
+- Por periodo  
+- Por agente (si hay oficina)  
+- Totales: por facturar / por cobrar / cobrado
+
+### 8.5 Facturación de comisiones a aseguradoras
+
+- Alta de aseguradoras / promotorías como “clientes a facturar”  
+- Generar o registrar factura (factura + folio CFDI si el negocio lo requiere)  
+- Adjuntar soporte (estado de cuenta, producción del mes)  
+- Marcar envío y seguimiento de pago  
+- Nota: la timbrado CFDI puede ser nativo o vía proveedor (Facturama, etc.) — decidir en implementación
+
+### 8.6 Portal del cliente
+
+Login del asegurado para:
+
+- Ver pólizas vigentes  
+- Ver fechas de vencimiento  
+- Descargar documentos (póliza, recibo) cuando existan  
+- Solicitar renovación / “quiero que me cotice”  
+- Actualizar datos de contacto  
+- (Opcional) ver historial de siniestros / estatus de reporte
+
+---
+
+## 9. Ideas adicionales (software típico de agentes)
+
+Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar después del núcleo de la sección 8.
+
+### Alta prioridad (casi estándar en el mercado)
+
+| Idea | Para qué sirve |
+|------|----------------|
+| **Pipeline de ventas / embudo** | Lead → contactado → cotizado → negociación → ganado/perdido |
+| **Bandeja unificada WhatsApp** | Varios agentes, asignación, historial en la ficha del cliente |
+| **Alertas de cobranza (recibo)** | No solo vence la póliza: también el pago fraccionado |
+| **Renovaciones en un tablero** | “Esta semana hay 23 por renovar” con % retenido |
+| **Documentos del cliente** | INE, comprobante, factura auto, fotos, solicitudes |
+| **Multiagente / oficinas** | Roles, metas, cartera por asesor, supervisor |
+| **Reportes y tablero** | Primas, emisiones, retención, comisiones del mes |
+| **Plantillas de mensajes** | WA/email: cotización lista, faltan datos, feliz cumpleaños, vencimiento |
+
+### Media prioridad (diferenciadores)
+
+| Idea | Para qué sirve |
+|------|----------------|
+| **Comparativo PDF / propuesta formal** | Enviar 3 opciones con logo de la oficina |
+| **Recotización en 1 clic** | Renovar con mismos datos del año pasado |
+| **Endosos y movimientos** | Cambio de auto, alta de conductor, domicilio |
+| **Siniestros (mesa ligera)** | Alta de reporte, folios, seguimiento, documentos |
+| **Metas y comisiones internas** | Split entre agente y oficina / promotor |
+| **App móvil del agente** | Agenda + cartera + cotizar en campo |
+| **Importar cartera** | Excel / CSV desde otras oficinas o portales |
+| **Estados de cuenta vs aseguradora** | Conciliación automática o semi (cargar Excel de la cia.) |
+| **Firma digital / checklist de emisión** | Documentos listos antes de emitir |
+| **NPS / encuesta post-emisión** | Calidad de atención |
+
+### Más adelante (escala / oficina grande)
+
+| Idea | Para qué sirve |
+|------|----------------|
+| **Cotizador flotillas** | Empresas / varios vehículos |
+| **Gastos médicos (familia)** | Padecimientos, suma asegurada, parentescos |
+| **Vida y beneficiarios** | Gestión de designaciones |
+| **Contabilidad ligera** | Ingresos, egresos, utilidad por agente |
+| **Marketing**: landing + QR + tracking UTM | Origen del lead |
+| **Capacitación / library** | Materiales de aseguradoras, guías |
+| **API propia Segurod** | Que otras apps lean cartera / creen leads |
+| **White-label** | Marca de cada oficina en portal y cotizador |
+| **Integración Google Calendar / Outlook** | Sincronizar agenda |
+| **Pagos en línea al cliente** | Link de pago de prima (si hay pasarela + convenio) |
+
+### Ideas de UX que suelen marcar diferencia
+
+- **Hoy en un vistazo:** agenda del día + vencimientos + comisiones por facturar + leads nuevos  
+- **Ficha 360 del cliente:** chat, pólizas, docs, comisiones, tareas  
+- **Modo “solo móvil”** para agentes en calle  
+- **Botón “compartir portal”** al cliente por WhatsApp  
+
+---
+
+## 10. Alcance por fases (actualizado)
+
+### Fase 0 — Validación (borrador)
 
 - [x] Definir canales y cotización completa  
 - [x] Investigar APIs  
-- [ ] Validar país, ramos y figura legal (agente / broker / aliado)  
-- [ ] Elegir 1–2 partners de API para demos comerciales  
-- [ ] Prototipo de flujo (Figma / mapa de conversación) — **sin código**
+- [x] Definir módulo agente: agenda, comisiones, cartera, recordatorios, portal  
+- [ ] Validar país, ramos y figura legal  
+- [ ] Elegir partners de API  
+- [ ] Boceto UX panel agente + portal cliente — **sin código**
 
-### Fase 1 — MVP usable
+### Fase 1 — MVP cotización + leads
 
-- WhatsApp: menú + captura + enlace web  
-- Web: cotizador auto completo (puede ser mock)  
-- Panel mínimo de leads  
-- Preparar adapter hacia un agregador real
+- WhatsApp + web cotizador (mock ok)  
+- Panel: leads y asignación básica  
+- Ficha mínima de cliente
 
-### Fase 2 — Cotización real multi-aseguradora
+### Fase 2 — Cartera y agenda
 
-- Integración productiva con partner API  
-- Comparador con precios reales  
-- Notificaciones y vencimiento de cotización  
-- Asignación a agentes
+- Cartera de pólizas (alta manual o import CSV)  
+- Agenda y tareas  
+- Recordatorios de vencimiento (email y/o WhatsApp)  
+- Portal cliente básico (pólizas + vencimientos)
 
-### Fase 3 — Emisión y operación
+### Fase 3 — Cotización real + comisiones
 
-- Emisión / pago / documentos  
-- Renovaciones  
+- API aseguradora / agregador en productivo  
+- Módulo comisiones (por facturar / por pagar / pagadas)  
+- Facturación a aseguradoras (registro + adjuntos; CFDI según decisión)  
+- Tablero renovaciones
+
+### Fase 4 — Operación avanzada
+
+- Emisión / documentos  
+- Siniestros ligeros  
+- Conciliación de estados de cuenta  
+- Multiagente / reportes / app  
 - Más ramos
 
 ---
 
-## 9. Decisiones abiertas (para siguiente reunión)
+## 11. Decisiones abiertas (para siguiente reunión)
 
-1. **País y regulación:** ¿México u otro? ¿Ya hay cédula / oficina de agente o broker?  
+1. **País y regulación:** ¿México? ¿Cédula / oficina agent o broker?  
 2. **Ramo inicial:** ¿Solo auto o también GMM / hogar?  
-3. **Modelo de negocio:** comisión por póliza, fee SaaS a agentes, white-label  
-4. **Emisión:** ¿solo cotizar + lead, o cotizar y emitir en línea?  
-5. **WhatsApp:** ¿Cloud API directa o BSP?  
-6. **Provider preferido para cotizar:** Dora / Inter Connect / Bruno / Surexs / otro ya negociado  
-7. **Marca visual y dominio**  
-8. **Quién atiende los leads** (bot → humano)
+3. **Modelo de negocio Segurod:** comisión por póliza, fee SaaS a agentes, white-label  
+4. **Emisión:** ¿solo cotizar + lead, o cotizar y emitir?  
+5. **WhatsApp:** Cloud API directa o BSP  
+6. **Provider API:** Dora / Inter Connect / Bruno / Surexs / directo  
+7. **Comisiones:** ¿solo registro interno o también **timbrado CFDI** desde día 1?  
+8. **Portal cliente:** ¿marca Segurod o marca de cada oficina (white-label)?  
+9. **Cartera inicial:** ¿alta manual, import Excel, o sync con aseguradoras?  
+10. **Quién atiende leads** (bot → humano)  
+11. **Marca visual y dominio**
 
 ---
 
-## 10. Riesgos y supuestos
+## 12. Riesgos y supuestos
 
 | Riesgo | Mitigación |
 |--------|------------|
-| Sin convenio API al lanzar | Empezar con lead completo + mock; no vender “póliza emitida” sin partner |
-| Tarifas distintas a las del agente | Usar BYOR (“trae tus tarifas”) si el partner lo permite |
-| Abandono en WhatsApp (muchas preguntas) | Ofrecer enlace web temprano |
-| Cumplimiento de datos personales | Aviso de privacidad, consentimiento en WA y web |
-| Expectativa de precio “oficial” | Etiquetar claramente si es estimado |
+| Sin convenio API al lanzar | Lead + mock; cartera y agenda sí aportan valor sin API |
+| Tarifas distintas a las del agente | BYOR si el partner lo permite |
+| Abandono en WhatsApp | Enlace web temprano |
+| Datos personales | Aviso de privacidad, consentimiento WA/web/portal |
+| Expectativa de precio “oficial” | Etiquetar estimado vs tarifa real |
+| CFDI / factura mal diseñada | Empezar con “registro de factura” y enlazar PAC después |
+| Recordatorios molestos | Reglas claras + opt-out + tope por póliza |
+| Portal sin adopción | Activarlo al emitir / renovar y mandar link por WA |
 
 ---
 
-## 11. Entregables del borrador (esta etapa)
+## 13. Entregables del borrador (esta etapa)
 
-1. Este documento de proyecto  
+1. Documento de proyecto (cotización + ops agente + portal)  
 2. Matriz de APIs / partners (sección 5)  
-3. Mapa de flujos WhatsApp + web (secciones 3 y 7)  
-4. Lista de decisiones abiertas (sección 9)
+3. Mapa de flujos WhatsApp, web, renovación y comisiones  
+4. Módulo agente confirmado + backlog de ideas (secciones 8 y 9)  
+5. Decisiones abiertas (sección 11)
 
 **Próximo paso sugerido (sin programar):**  
-Responder las decisiones de la sección 9 → boceto UX del wizard y del chat → contacto comercial con 1 agregador para sandbox.
+Priorizar MVP de panel (hoy / cartera / agenda) → boceto portal cliente → seguir contacto API con aseguradoras/agregadores.
 
 ---
 
-## 12. Referencias rápidas (investigación)
+## 14. Referencias rápidas (investigación)
 
 - Agregadores / Open Insurance (MX): Dora, Inter Connect, Bruno, Surexs, bolttech  
 - Canal WhatsApp: Meta WhatsApp Cloud API (+ BSP opcionales)  
-- Modelos de producto similares: comparadores web + chatbots de agencias de seguros  
+- Software de referencia (categoría): CRM/agencias de seguros, portales Q 360 / IDEAS GNP (como referencia de funciones, no como competencia a clonar)  
+- Modelos vecinos: comparador + chatbot + cartera + cobranza de comisiones  
 
-*Las APIs concretas, precios y listados de aseguradoras se confirman con cada proveedor; no hay un “API pública universal” de todas las aseguradoras.*
+*Las APIs concretas se confirman con cada proveedor; no hay un API pública universal de todas las aseguradoras.*
