@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>SmartApps Seguros — Presentación comercial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #0b6bcb;
+      --violet: #7b3fe4;
+      --magenta: #e0118a;
+      --ink: #12243f;
+      --muted: #4a5d78;
+      --line: #d9e3f2;
+      --soft: #f5f8ff;
+      --grad: linear-gradient(115deg, #0b6bcb 0%, #7b3fe4 50%, #e0118a 100%);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: Manrope, system-ui, sans-serif;
+      color: var(--ink);
+      background: #fff;
+      font-size: 11.5pt;
+      line-height: 1.45;
+    }
+
+    h1, h2, h3 { font-family: Sora, Manrope, sans-serif; margin: 0 0 0.45rem; letter-spacing: -0.02em; }
+    p { margin: 0 0 0.7rem; }
+    .muted { color: var(--muted); }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 14mm 16mm 16mm;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+    }
+    .page:last-child { page-break-after: auto; }
+
+    .grad-text {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* Cover */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        radial-gradient(700px 380px at 100% 0%, rgba(224,17,138,0.10), transparent 55%),
+        radial-gradient(600px 360px at 0% 100%, rgba(11,107,203,0.12), transparent 50%),
+        #fff;
+    }
+    .parent-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .parent-row img { width: 42px; height: 42px; }
+    .parent-row span {
+      font-size: 10pt;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .hero-brand {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin: 28px 0 22px;
+    }
+    .hero-brand img {
+      width: 118px;
+      height: 118px;
+      filter: drop-shadow(0 12px 24px rgba(123,63,228,0.18));
+    }
+    .hero-brand h1 {
+      font-size: 28pt;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+    .hero-brand .tagline {
+      font-size: 11pt;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .slogan-box {
+      margin-top: 8px;
+      padding: 18px 20px;
+      border-radius: 16px;
+      background: var(--grad);
+      color: #fff;
+    }
+    .slogan-box .big {
+      font-family: Sora, sans-serif;
+      font-size: 18pt;
+      font-weight: 800;
+      line-height: 1.25;
+      margin: 0 0 6px;
+    }
+    .slogan-box .sub { margin: 0; opacity: 0.95; font-weight: 600; }
+    .cover-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 9.5pt;
+    }
+    .pill {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--blue);
+      font-weight: 800;
+      font-size: 9pt;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* Sections */
+    .header-mini {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .header-mini img { width: 36px; height: 36px; }
+    .header-mini .title {
+      font-family: Sora, sans-serif;
+      font-weight: 800;
+      font-size: 10pt;
+    }
+    .header-mini .page-label { color: var(--muted); font-size: 9pt; font-weight: 600; }
+
+    h2 { font-size: 18pt; margin-bottom: 10px; }
+    h3 { font-size: 12pt; margin-top: 14px; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #fff;
+    }
+    .card.soft { background: var(--soft); }
+    .card h3 { margin: 0 0 6px; }
+    .card p, .card li { color: var(--muted); font-size: 10.2pt; }
+    .card p:last-child { margin-bottom: 0; }
+
+    ul.clean {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    ul.clean li {
+      position: relative;
+      padding-left: 16px;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 10.2pt;
+    }
+    ul.clean li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.45em;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--grad);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .feature {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .feature .dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 5px;
+      border-radius: 50%;
+      background: var(--grad);
+      flex: 0 0 auto;
+    }
+    .feature strong {
+      display: block;
+      font-size: 10.5pt;
+      margin-bottom: 2px;
+    }
+    .feature span {
+      display: block;
+      color: var(--muted);
+      font-size: 9.6pt;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 12px 0 16px;
+    }
+    .kpi {
+      border-radius: 12px;
+      padding: 12px;
+      color: #fff;
+      background: var(--grad);
+    }
+    .kpi b {
+      display: block;
+      font-family: Sora, sans-serif;
+      font-size: 11pt;
+      margin-bottom: 4px;
+    }
+    .kpi span { font-size: 9.3pt; opacity: 0.95; }
+
+    .quote {
+      margin: 14px 0;
+      padding: 14px 16px;
+      border-left: 4px solid transparent;
+      border-image: var(--grad) 1;
+      background: var(--soft);
+      border-radius: 0 12px 12px 0;
+      font-family: Sora, sans-serif;
+      font-weight: 700;
+      font-size: 12pt;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.8pt;
+      margin-top: 8px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--soft);
+      font-family: Sora, sans-serif;
+      font-size: 9pt;
+    }
+
+    .footer-bar {
+      position: absolute;
+      left: 16mm;
+      right: 16mm;
+      bottom: 10mm;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 8.5pt;
+      border-top: 1px solid var(--line);
+      padding-top: 6px;
+    }
+
+    .close {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 260mm;
+      text-align: center;
+      align-items: center;
+      background:
+        radial-gradient(700px 400px at 50% 0%, rgba(11,107,203,0.10), transparent 60%),
+        #fff;
+    }
+    .close img { width: 110px; height: 110px; margin-bottom: 16px; }
+    .close h2 { font-size: 24pt; margin-bottom: 10px; }
+    .close .big-s {
+      font-family: Sora, sans-serif;
+      font-size: 16pt;
+      font-weight: 800;
+      margin: 10px 0 18px;
+    }
+    .cta {
+      display: inline-block;
+      padding: 12px 22px;
+      border-radius: 12px;
+      color: #fff;
+      background: var(--grad);
+      font-weight: 800;
+      font-size: 12pt;
+    }
+
+    @page { size: A4; margin: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- PORTADA -->
+  <section class="page cover">
+    <div>
+      <div class="parent-row">
+        <img src="assets/smartapps-logo.png" alt="SmartApps" />
+        <span>SmartApps · Suite empresarial</span>
+      </div>
+      <span class="pill">Presentación comercial</span>
+      <div class="hero-brand">
+        <img src="assets/smartapps-seguros-logo.png" alt="SmartApps Seguros" />
+        <div>
+          <h1 class="grad-text">SmartApps Seguros</h1>
+          <p class="tagline">ERP SaaS para la administración integral de empresas de seguros</p>
+        </div>
+      </div>
+      <div class="slogan-box">
+        <p class="big">“Todo tu negocio de seguros, en un solo lugar.”</p>
+        <p class="sub">Un solo sistema para cotizar, administrar cartera, comisiones y atender clientes.</p>
+      </div>
+    </div>
+    <div class="cover-foot">
+      <div>
+        <strong>Desarrollado por SmartApps</strong><br />
+        Plataforma SaaS multi-tenant para agentes, promotorías y brokers
+      </div>
+      <div style="text-align:right">
+        México & Latinoamérica<br />
+        Documento de presentación de proyecto
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIÉNES SOMOS / PROMESA -->
+  <section class="page">
+    <div class="header-mini">
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="assets/smartapps-seguros-logo.png" alt="" />
+        <div class="title">SmartApps Seguros</div>
+      </div>
+      <div class="page-label">Propuesta de valor</div>
+    </div>
+
+    <h2 class="grad-text">¿Por qué SmartApps Seguros?</h2>
+    <p class="muted">
+      Plataforma tecnológica desarrollada por SmartApps para transformar la operación de agentes,
+      promotorías y empresas del sector asegurador: comercial, administrativa y financiera en un solo lugar.
+    </p>
+
+    <div class="quote">Nuestra promesa: un solo sistema para administrar todo tu negocio de seguros.</div>
+
+    <div class="kpis">
+      <div class="kpi"><b>Cotiza y cierra</b><span>WhatsApp + web móvil, manual o API</span></div>
+      <div class="kpi"><b>Opera y retiene</b><span>Cartera, renovaciones y comisiones</span></div>
+      <div class="kpi"><b>Decide con datos</b><span>Panel CEO por ramo y agente</span></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card soft">
+        <h3>Eslogan de ventas</h3>
+        <ul class="clean">
+          <li><strong>Todo tu negocio de seguros, en un solo lugar.</strong></li>
+          <li>Deja el Excel. Lleva tu agencia a la nube.</li>
+          <li>Cotiza hoy. Renueva siempre. Cobra tus comisiones a tiempo.</li>
+          <li>Tu oficina, tu marca, tus reglas — en un ERP SaaS.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Para quién es</h3>
+        <ul class="clean">
+          <li>Agentes y oficinas independientes</li>
+          <li>Promotorías y brokers</li>
+          <li>Equipos multiagente / multi sucursal</li>
+          <li>Quién vende por WhatsApp y quiere orden operativo</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <span>SmartApps Seguros · Presentación comercial</span>
+      <span>smartapps · confidencial</span>
+    </div>
+  </section>
+
+  <!-- CARACTERÍSTICAS CORE -->
+  <section class="page">
+    <div class="header-mini">
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="assets/smartapps-seguros-logo.png" alt="" />
+        <div class="title">SmartApps Seguros</div>
+      </div>
+      <div class="page-label">Características principales</div>
+    </div>
+
+    <h2 class="grad-text">Características del sistema</h2>
+    <p class="muted">Capacidades definidas en el diseño del producto (núcleo confirmado).</p>
+
+    <div class="feature-grid">
+      <div class="feature"><div class="dot"></div><div><strong>Cotización WhatsApp</strong><span>Flujo conversacional y envío de enlace web</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Cotizador web móvil</strong><span>Wizard completo desde el celular</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Manual / API / mixto</strong><span>Activa aseguradoras cuando tengas sandbox</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Agenda y seguimientos</strong><span>Citas, tareas y recordatorios del agente</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Cartera de clientes</strong><span>Pólizas, ramos, estatus y documentos</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Renovaciones automáticas</strong><span>Alertas 45/30/15/7 días por vencer</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Comisiones por aseguradora</strong><span>Tablas % que paga cada compañía</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Comisiones internas</strong><span>Split por usuario / vendedor</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Facturación a compañías</strong><span>Pendiente / facturada / por pagar / pagada</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Panel CEO</strong><span>Cotizaciones, ventas y cortes por ramo</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Portal del cliente</strong><span>Pólizas, vencimientos y documentos</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Push + PWA</strong><span>Agregar a inicio iPhone/Android</span></div></div>
+    </div>
+
+    <h3>SaaS y configuración</h3>
+    <div class="feature-grid" style="margin-top:8px">
+      <div class="feature"><div class="dot"></div><div><strong>Marca de la oficina</strong><span>Logo, datos, direcciones, correo de envíos</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Usuarios y permisos</strong><span>CEO, admin, vendedor, asistente</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Auditoría</strong><span>Quién hizo qué y cuándo</span></div></div>
+      <div class="feature"><div class="dot"></div><div><strong>Multi razón social + SAT</strong><span>Varios RFC y certificados CSD</span></div></div>
+    </div>
+
+    <div class="footer-bar">
+      <span>SmartApps Seguros · Presentación comercial</span>
+      <span>Características núcleo</span>
+    </div>
+  </section>
+
+  <!-- MÓDULOS Y ROADMAP -->
+  <section class="page">
+    <div class="header-mini">
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="assets/smartapps-seguros-logo.png" alt="" />
+        <div class="title">SmartApps Seguros</div>
+      </div>
+      <div class="page-label">Arquitectura y expansión</div>
+    </div>
+
+    <h2 class="grad-text">Arquitectura modular</h2>
+    <p class="muted">
+      Cada capacidad vive en un módulo (`mod-*`). Las nuevas funciones se agregan sin romper el resto del sistema.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Módulos</th>
+          <th>Beneficio</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Core</strong></td>
+          <td>Tenancy, usuarios, config, SAT, auditoría</td>
+          <td>Tu oficina aislada, segura y configurable</td>
+        </tr>
+        <tr>
+          <td><strong>Comercial</strong></td>
+          <td>Cotización, WhatsApp, web móvil, providers API</td>
+          <td>Captas y cotizas más rápido</td>
+        </tr>
+        <tr>
+          <td><strong>Operación</strong></td>
+          <td>Cartera, agenda, renovaciones, comisiones</td>
+          <td>Retienes cartera y cobras bien</td>
+        </tr>
+        <tr>
+          <td><strong>Experiencia</strong></td>
+          <td>Portal agente, portal cliente, panel CEO, PWA</td>
+          <td>Cada actor ve lo que necesita</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>En roadmap (ideas ERP/AMS)</h3>
+    <div class="grid-2">
+      <div class="card">
+        <ul class="clean">
+          <li>Recibos de prima y cobranza / mora</li>
+          <li>Conciliación de borderó / planilla</li>
+          <li>Siniestros ligeros</li>
+          <li>Endosos y cancelaciones</li>
+        </ul>
+      </div>
+      <div class="card">
+        <ul class="clean">
+          <li>Embudo de ventas y bitácora 360</li>
+          <li>Bandeja WhatsApp multiagente</li>
+          <li>Cross-sell por ramo</li>
+          <li>Export contable e integraciones</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="quote" style="margin-top:16px">
+      La tecnología debe trabajar para las personas, no las personas para la tecnología.
+    </div>
+
+    <div class="footer-bar">
+      <span>SmartApps Seguros · Presentación comercial</span>
+      <span>Módulos</span>
+    </div>
+  </section>
+
+  <!-- CIERRE -->
+  <section class="page close">
+    <img src="assets/smartapps-seguros-logo.png" alt="SmartApps Seguros" />
+    <h2 class="grad-text">SmartApps Seguros</h2>
+    <p class="big-s">“Todo tu negocio de seguros, en un solo lugar.”</p>
+    <p class="muted" style="max-width:420px;margin:0 auto 22px">
+      Cotiza por WhatsApp o web. Administra cartera y comisiones.
+      Atiende a tus clientes con portal y alertas. Decide con el panel CEO.
+    </p>
+    <div class="cta">Solicita una demo</div>
+    <p class="muted" style="margin-top:28px;font-size:10pt">
+      Desarrollado por <strong>SmartApps</strong><br />
+      ERP SaaS para la administración integral de empresas de seguros
+    </p>
+  </section>
+
+</body>
+</html>

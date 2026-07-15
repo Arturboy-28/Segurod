@@ -8,6 +8,7 @@ Desarrollado por **SmartApps**.
 ## Documentos
 
 - Borrador de producto / módulos: [`PROYECTO_BORRADOR.md`](./PROYECTO_BORRADOR.md)
+- **PDF presentación comercial:** [`marketing/SmartApps-Seguros-Presentacion-Comercial.pdf`](./marketing/SmartApps-Seguros-Presentacion-Comercial.pdf)
 - Banner y página comercial: [`marketing/banner-comercial.html`](./marketing/banner-comercial.html)
 - Banner PNG: [`marketing/assets/smartapps-seguros-banner.png`](./marketing/assets/smartapps-seguros-banner.png)
 - Logo empresa SmartApps: [`marketing/assets/smartapps-logo.png`](./marketing/assets/smartapps-logo.png)
