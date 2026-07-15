@@ -8,7 +8,7 @@
 
 ## 1. Objetivo
 
-Construir **Segurod** como plataforma para agentes/brokers con dos caras:
+Construir **Segurod** como producto **SaaS multi-tenant** (cada oficina/agencia es un cliente que paga suscripción) con dos caras de producto:
 
 ### A) Cotización (adquisición)
 
@@ -47,7 +47,7 @@ Herramientas diarias del intermediario en un solo sistema:
 | Habla con su agente sin perder historial | Agenda + seguimiento de leads |
 | Transparencia de coberturas y precio | Control de comisiones: por facturar / por cobrar |
 
-En una frase: **cotizar + administrar cartera + cobrar comisiones + servir al cliente.**
+En una frase: **SaaS para oficinas de seguros: cotizar + cartera + comisiones + portal, con su marca y sus usuarios.**
 
 ---
 
@@ -251,7 +251,10 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 | Facturación a aseguradoras | Generar / registrar factura de comisión (CFDI si aplica) |
 | Recordatorios | Vencimientos y renovaciones automáticas |
 | Portal del cliente | Login cliente: pólizas, vencimientos, documentos |
-| Auth / roles | Admin oficina, agente, asistente, cliente |
+| Tenancy SaaS | Cada oficina = tenant (datos y config aislados) |
+| Configuración del tenant | Logo, datos empresa/agente, direcciones, correo, APIs, respaldos |
+| Usuarios y permisos | Dueño, admin, vendedor, asistente (+ cliente en portal) |
+| Auditoría | Log de acciones (quién hizo qué y cuándo) |
 
 ---
 
@@ -295,9 +298,76 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 
 ---
 
-## 8. Módulo agente — alcance confirmado
+## 8. Modelo SaaS y configuración del tenant
 
-Funciones que **sí entran** en el producto (definidas en discovery):
+Segurod se vende por **suscripción** (SaaS). Cada cliente (oficina, broker o agente independiente) es un **tenant** con su propia configuración, usuarios y datos.
+
+### 8.0 Pantalla / área de Configuración (requerido)
+
+#### Identidad y marca
+- Logo de la empresa (cotizador, portal cliente, PDFs, correos)
+- Nombre comercial / razón social
+- Colores básicos (opcional, white-label ligero)
+- Datos del agente o de la empresa de seguros (RFC, cédula, clave de agente global si aplica)
+
+#### Datos de contacto y direcciones
+- Teléfonos, WhatsApp de la oficina, sitio web
+- Correo de contacto visible al cliente
+- Direcciones (matriz, sucursales) — una o varias
+- Horarios de atención (opcional)
+
+#### Correo para envíos
+- Configurar remitente (SMTP propio o proveedor: Resend, SendGrid, SES, etc.)
+- From name / from email / reply-to
+- Plantillas: cotización, vencimiento, bienvenida al portal, factura de comisión
+- Prueba de envío (“enviar correo de test”)
+- Fallbacks si falla el SMTP del tenant (cola + reintento)
+
+#### Cotización / APIs (ligado a §4.4)
+- Toggle manual / API / mixto
+- Credenciales por provider (sandbox/prod)
+- Quién puede editar estas llaves (solo admin/dueño)
+
+#### Usuarios (vendedores) y permisos
+Roles mínimos sugeridos:
+
+| Rol | Puede |
+|-----|--------|
+| **Dueño** | Todo + billing SaaS + borrar tenant (si aplica) |
+| **Admin** | Configuración, usuarios, reportes, comisiones, APIs |
+| **Vendedor / agente** | Cotizar, cartera asignada, agenda, leads |
+| **Asistente** | Carga docs, agenda, seguimiento (sin ver comisiones si se restringe) |
+| **Cliente** | Solo portal del asegurado |
+
+Permisos granulares (ejemplos): ver comisiones, facturar, editar config, exportar cartera, activar API, ver auditoría, gestionar usuarios.
+
+#### Auditoría de usuarios
+Bitácora inmutable (o difícil de alterar) con:
+- Login / logout / intentos fallidos
+- Altas, bajas y cambios de permisos
+- Cambios en configuración (logo, correo, APIs)
+- Altas/ediciones sensibles: pólizas, comisiones, facturas
+- Exportaciones de datos
+- Quién, qué, cuándo, IP/dispositivo (si disponible)
+
+Vista filtrable para admin/dueño; retención configurable (ej. 90 días / 1 año).
+
+#### Respaldos
+- Política de backup del tenant (automático diario/semanal)
+- Listado de respaldos disponibles
+- Solicitar restauración (self-service o vía soporte, según plan)
+- Exportación de cartera / comisiones (CSV) como “respaldo operativo” del usuario
+- Nota SaaS: el backup técnico lo corre la plataforma; el tenant ve estado y puede pedir restore/export
+
+#### Billing SaaS (config lateral, fase posterior)
+- Plan activo, límites (usuarios, cotizaciones, WhatsApp)
+- Facturación de la suscripción Segurod (separada de comisiones a aseguradoras)
+
+---
+
+## 8A. Módulo agente — alcance confirmado
+
+Funciones operativas que **sí entran** (además de la configuración SaaS):
 
 ### 8.1 Agenda
 
@@ -363,7 +433,8 @@ Login del asegurado para:
 
 ## 9. Ideas adicionales (software típico de agentes)
 
-Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar después del núcleo de la sección 8.
+Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar después del núcleo (secciones 8 y 8A).  
+*Nota: logo, usuarios/permisos, auditoría y white-label básico ya están en Configuración SaaS (§8).*
 
 ### Alta prioridad (casi estándar en el mercado)
 
@@ -374,9 +445,9 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 | **Alertas de cobranza (recibo)** | No solo vence la póliza: también el pago fraccionado |
 | **Renovaciones en un tablero** | “Esta semana hay 23 por renovar” con % retenido |
 | **Documentos del cliente** | INE, comprobante, factura auto, fotos, solicitudes |
-| **Multiagente / oficinas** | Roles, metas, cartera por asesor, supervisor |
 | **Reportes y tablero** | Primas, emisiones, retención, comisiones del mes |
 | **Plantillas de mensajes** | WA/email: cotización lista, faltan datos, feliz cumpleaños, vencimiento |
+| **Sucursales** | Varias direcciones/equipos bajo el mismo tenant |
 
 ### Media prioridad (diferenciadores)
 
@@ -404,7 +475,7 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 | **Marketing**: landing + QR + tracking UTM | Origen del lead |
 | **Capacitación / library** | Materiales de aseguradoras, guías |
 | **API propia Segurod** | Que otras apps lean cartera / creen leads |
-| **White-label** | Marca de cada oficina en portal y cotizador |
+| **White-label avanzado** | Dominio propio (cotiza.tuagencia.com), CSS completo |
 | **Integración Google Calendar / Outlook** | Sincronizar agenda |
 | **Pagos en línea al cliente** | Link de pago de prima (si hay pasarela + convenio) |
 
@@ -425,15 +496,19 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 - [x] Investigar APIs  
 - [x] Modos manual / API / mixto con toggles (activar al tener sandbox)  
 - [x] Definir módulo agente: agenda, comisiones, cartera, recordatorios, portal  
+- [x] Modelo SaaS: config (logo, datos, correo, usuarios, permisos, auditoría, respaldos)  
 - [ ] Validar país, ramos y figura legal  
 - [ ] Elegir partners de API  
-- [ ] Boceto UX panel agente + portal cliente — **sin código**
+- [ ] Boceto UX: config tenant + panel agente + portal cliente — **sin código**
 
-### Fase 1 — MVP cotización + leads
+### Fase 1 — MVP SaaS + cotización + leads
 
+- Alta de tenant (oficina) + login  
+- **Configuración:** logo, datos empresa/agente, direcciones, correo de envíos  
+- Usuarios vendedor + roles/permisos básicos + auditoría de login/cambios clave  
 - WhatsApp + web: captura completa  
 - Cotización **manual** operativa desde el día 1  
-- Toggles: API global OFF; providers OFF (listos para encender después)  
+- Toggles API OFF (listos para encender después)  
 - Panel: leads y asignación básica  
 - Ficha mínima de cliente
 
@@ -453,30 +528,33 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 - Facturación a aseguradoras (registro + adjuntos; CFDI según decisión)  
 - Tablero renovaciones
 
-### Fase 4 — Operación avanzada
+### Fase 4 — Operación avanzada + plataforma SaaS
 
 - Emisión / documentos  
 - Siniestros ligeros  
 - Conciliación de estados de cuenta  
-- Multiagente / reportes / app  
+- Respaldos self-service / restore  
+- Billing de suscripción Segurod (planes y límites)  
+- Reportes / app  
 - Más ramos
 
 ---
 
 ## 11. Decisiones abiertas (para siguiente reunión)
 
-1. **País y regulación:** ¿México? ¿Cédula / oficina agent o broker?  
+1. **País y regulación:** ¿México? ¿Cédula / oficina agente o broker?  
 2. **Ramo inicial:** ¿Solo auto o también GMM / hogar?  
-3. **Modelo de negocio Segurod:** comisión por póliza, fee SaaS a agentes, white-label  
+3. **Planes SaaS:** precios, límites (usuarios, cotizaciones, WA), trial  
 4. **Emisión:** ¿solo cotizar + lead, o cotizar y emitir?  
-5. **WhatsApp:** Cloud API directa o BSP  
+5. **WhatsApp:** Cloud API directa o BSP; ¿un número por tenant?  
 6. **Provider API:** Dora / Inter Connect / Bruno / Surexs / directo  
-6b. **Cotización:** arrancar 100 % manual; ¿quién puede activar toggles API? (solo admin / también agente)  
+6b. **Cotización:** arrancar 100 % manual; ¿quién activa toggles API? (dueño/admin)  
 7. **Comisiones:** ¿solo registro interno o también **timbrado CFDI** desde día 1?  
-8. **Portal cliente:** ¿marca Segurod o marca de cada oficina (white-label)?  
-9. **Cartera inicial:** ¿alta manual, import Excel, o sync con aseguradoras?  
-10. **Quién atiende leads** (bot → humano)  
-11. **Marca visual y dominio**
+8. **Correo de envíos:** ¿SMTP del cliente o correo gestionado por Segurod?  
+9. **Respaldos:** ¿restore self-service o solo vía soporte?  
+10. **Cartera inicial:** ¿alta manual, import Excel, o sync con aseguradoras?  
+11. **Dominio:** app.segurod.mx vs subdominio por oficina (acme.segurod.mx)  
+12. **Marca visual Segurod** (la plataforma) vs marca de cada tenant
 
 ---
 
@@ -492,19 +570,22 @@ Basado en portales de agentes, CRM insurtech y prácticas de oficinas. Priorizar
 | CFDI / factura mal diseñada | Empezar con “registro de factura” y enlazar PAC después |
 | Recordatorios molestos | Reglas claras + opt-out + tope por póliza |
 | Portal sin adopción | Activarlo al emitir / renovar y mandar link por WA |
+| Mezcla de datos entre oficinas | Multi-tenant estricto; nunca compartir tablas sin `tenant_id` |
+| Vendedor ve comisiones ajenas | Permisos por rol + cartera asignada |
+| SMTP mal configurado | Test de envío + logs + fallback de plataforma |
 
 ---
 
 ## 13. Entregables del borrador (esta etapa)
 
-1. Documento de proyecto (cotización + ops agente + portal)  
+1. Documento de proyecto (SaaS + cotización + ops agente + portal)  
 2. Matriz de APIs / partners (sección 5)  
 3. Mapa de flujos WhatsApp, web, renovación y comisiones  
-4. Módulo agente confirmado + backlog de ideas (secciones 8 y 9)  
+4. Configuración SaaS + módulo agente + backlog (secciones 8, 8A y 9)  
 5. Decisiones abiertas (sección 11)
 
 **Próximo paso sugerido (sin programar):**  
-Priorizar MVP de panel (hoy / cartera / agenda) → boceto portal cliente → seguir contacto API con aseguradoras/agregadores.
+Boceto de **Configuración del tenant** (logo, usuarios, correo) → MVP panel → portal cliente → contacto API.
 
 ---
 
