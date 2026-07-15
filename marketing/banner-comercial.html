@@ -95,32 +95,36 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 0.9rem;
+      gap: 1rem;
     }
 
-    .brand img {
-      width: min(280px, 70vw);
+    .logo-img {
+      width: min(112px, 28vw);
       height: auto;
       display: block;
+      filter: drop-shadow(0 10px 24px rgba(123, 63, 228, 0.18));
     }
 
-    .brand-fallback {
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-    }
-
-    .brand-fallback svg { width: 220px; height: auto; }
+    .brand-text { display: grid; gap: 0.2rem; }
 
     .product-tag {
       display: inline-block;
-      margin-top: 0.15rem;
       font-family: Sora, sans-serif;
-      font-size: 0.82rem;
-      font-weight: 700;
-      letter-spacing: 0.22em;
-      color: var(--blue);
-      text-transform: uppercase;
+      font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-transform: none;
+    }
+
+    .brand-sub {
+      margin: 0;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
     }
 
     .hero h1 {
@@ -361,11 +365,12 @@
     <div class="hero-mesh" aria-hidden="true"></div>
     <div class="wrap hero-inner">
       <div class="brand" aria-label="SmartApps Seguros">
-        <div class="brand-fallback">
-          <img src="assets/smartapps-logo.svg" alt="SmartApps" width="220" height="68" />
+        <img class="logo-img" src="assets/smartapps-logo.png" alt="SmartApps" width="280" height="280" />
+        <div class="brand-text">
+          <div class="product-tag">SmartApps Seguros</div>
+          <p class="brand-sub">by SmartApps</p>
         </div>
       </div>
-      <div class="product-tag">Seguros</div>
       <h1>Todo tu negocio de seguros, en un solo lugar.</h1>
       <p class="lead">ERP SaaS para la administración integral de empresas de seguros.</p>
       <div class="cta-row">
