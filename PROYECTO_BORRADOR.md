@@ -1,14 +1,22 @@
-# Segurod — Borrador de proyecto
+# SmartApps Seguros — Borrador de proyecto
+
+**Nombre comercial:** SmartApps Seguros  
+**Empresa:** SmartApps  
+**Eslogan:** Todo tu negocio de seguros, en un solo lugar.  
+**Categoría:** ERP SaaS para la administración integral de empresas de seguros  
 
 **Estado:** borrador / discovery  
 **Alcance de este documento:** definición del producto (cotización + operaciones del agente + portal del cliente), canales, integración con aseguradoras y plan de implementación.  
-**Fuera de alcance ahora:** código, infraestructura en producción, contratos con aseguradoras.
+**Fuera de alcance ahora:** código de producto, infraestructura en producción, contratos con aseguradoras.  
+**Material comercial:** `marketing/banner-comercial.html` y `marketing/assets/smartapps-seguros-banner.png`
+
+> Nota: en versiones previas del borrador se usó el nombre de trabajo “Segurod”. El nombre comercial vigente es **SmartApps Seguros**.
 
 ---
 
 ## 1. Objetivo
 
-Construir **Segurod** como producto **SaaS multi-tenant** (cada oficina/agencia es un cliente que paga suscripción) con dos caras de producto:
+Construir **SmartApps Seguros** como producto **SaaS multi-tenant** (cada oficina/agencia es un cliente que paga suscripción) con dos caras de producto:
 
 ### A) Cotización (adquisición)
 
@@ -32,8 +40,6 @@ Herramientas diarias del intermediario en un solo sistema:
 - Portal del cliente (pólizas y vencimientos)
 
 **Hipótesis de mercado inicial:** México, ramo **auto** (mayor madurez de APIs). Expansión a moto, hogar, GMM y vida.
-
-**Nombre de producto de trabajo:** Segurod (ajustable).
 
 ---
 
@@ -237,7 +243,7 @@ WhatsApp **no cotiza** seguros. Solo transporta la conversación y el enlace. El
 | `mod-portal-agente` | Portal administrativo | Experiencia | UI agentes: hoy, leads, atajos a módulos | Lógica de primas |
 | `mod-portal-cliente` | Portal cliente | Experiencia | UI asegurado: pólizas, vencimientos, docs | Tablas de comisión |
 | `mod-portal-ceo` | Panel CEO | Experiencia | Resúmenes y cortes por ramo/agente | Persistencia de pólizas (consume datos) |
-| `mod-billing-saas` | Billing Segurod | Core (fase 2+) | Suscripción, límites de plan | Comisiones de aseguradoras |
+| `mod-billing-saas` | Billing SmartApps Seguros | Core (fase 2+) | Suscripción, límites de plan | Comisiones de aseguradoras |
 | `mod-cobranza` | Recibos / cobranza | Dominio *(candidato §9)* | Recibos de prima, mora, remesas | Timbrado SAT |
 | `mod-siniestros` | Siniestros | Dominio *(candidato §9)* | Folios, estatus, docs de reclamo | Cotización API |
 
@@ -317,7 +323,7 @@ Cada ficha: **para qué sirve**, **datos principales**, **funciones**, **depende
 - **Funciones:** alta de oficina, suspender/reactivar, feature flags por plan, aislamiento de datos (`tenant_id` en todo).
 - **Depende de:** — (base)
 - **Publica:** `TenantCreado`, `PlanCambiado`, `FeatureFlagConsultada`
-- **Pantallas:** onboarding SaaS, billing (enlace a `mod-billing-saas`), admin plataforma Segurod (no del agente).
+- **Pantallas:** onboarding SaaS, billing (enlace a `mod-billing-saas`), admin plataforma SmartApps (no del agente).
 
 ##### `mod-identity` — Usuarios, roles y comisiones internas
 - **Sirve para:** quién entra al sistema y qué puede hacer; split de comisión del vendedor.
@@ -352,13 +358,13 @@ Cada ficha: **para qué sirve**, **datos principales**, **funciones**, **depende
 - **Publica:** — (consume eventos o se llama explícitamente)
 - **Pantallas:** Config → Auditoría (CEO/admin).
 
-##### `mod-billing-saas` — Billing Segurod (fase 2+)
+##### `mod-billing-saas` — Billing SmartApps Seguros (fase 2+)
 - **Sirve para:** cobrar la suscripción del software (no comisiones de seguros).
 - **Datos:** plan, facturas SaaS, método de pago, uso vs límites.
 - **Funciones:** checkout, upgrade/downgrade, cortar por falta de pago.
 - **Depende de:** `mod-tenancy`
 - **Publica:** `SuscripcionVencida`, `LimiteAlcanzado`
-- **Pantallas:** Config → Plan / Facturación Segurod.
+- **Pantallas:** Config → Plan / Facturación SmartApps Seguros.
 
 ---
 
@@ -559,7 +565,7 @@ Cada ficha: **para qué sirve**, **datos principales**, **funciones**, **depende
 
 ## 8. Modelo SaaS y configuración del tenant
 
-Segurod se vende por **suscripción** (SaaS). Cada cliente (oficina, broker o agente independiente) es un **tenant** con su propia configuración, usuarios y datos.
+SmartApps Seguros se vende por **suscripción** (SaaS). Cada cliente (oficina, broker o agente independiente) es un **tenant** con su propia configuración, usuarios y datos.
 
 ### 8.0 Pantalla / área de Configuración (requerido)
 
@@ -686,7 +692,7 @@ Vista filtrable para admin/dueño; retención configurable (ej. 90 días / 1 añ
 
 #### Billing SaaS (config lateral, fase posterior)
 - Plan activo, límites (usuarios, cotizaciones, WhatsApp)
-- Facturación de la suscripción Segurod (separada de comisiones a aseguradoras)
+- Facturación de la suscripción SmartApps Seguros (separada de comisiones a aseguradoras)
 
 #### Alertas push (cliente y administrativo)
 El tenant puede **definir y encender** alertas push hacia:
@@ -709,7 +715,7 @@ Para que las alertas push funcionen bien en móvil sin app de tienda:
 - Flujo guiado: “Agregar a pantalla de inicio” (iOS Safari / Android Chrome)  
 - Service worker + Web Push (y lo que requiera iOS para notificaciones en PWA instalada)  
 - Permiso de notificaciones solo después de instalar / interacción del usuario  
-- Icono = logo del tenant (o Segurod)  
+- Icono = logo del tenant (o SmartApps Seguros)  
 - Si no hay push (permiso negado): fallback a email / WhatsApp / badge in-app
 
 ---
@@ -875,7 +881,7 @@ Fuentes: Softseguros, EFISeguros, Winsef, Figuro, Foliume, segElevia, BrokerDO, 
 | **Sync / download portales cias.** | `mod-providers-api` | Cuando exista convenio técnico |
 | **Marketing**: landing, QR, UTM | Canal + cotización | Origen del lead |
 | **Biblioteca de capacitación** | `mod-config` | Materiales de aseguradoras |
-| **API propia Segurod** | Core | Que terceros lean cartera / creen leads |
+| **API propia SmartApps Seguros** | Core | Que terceros lean cartera / creen leads |
 | **White-label avanzado (dominio propio)** | `mod-config` | cotiza.tuagencia.com |
 | **Google Calendar / Outlook** | `mod-agenda` | Sync de citas |
 | **Pagos en línea de prima** | `mod-cobranza` | Link de pago (pasarela + convenio) |
@@ -964,7 +970,7 @@ Fuentes: Softseguros, EFISeguros, Winsef, Figuro, Foliume, segElevia, BrokerDO, 
 - Siniestros ligeros  
 - Conciliación de estados de cuenta  
 - Respaldos self-service / restore  
-- Billing de suscripción Segurod (planes y límites)  
+- Billing de suscripción SmartApps Seguros (planes y límites)  
 - Reportes / app  
 - Más ramos
 
@@ -981,11 +987,11 @@ Fuentes: Softseguros, EFISeguros, Winsef, Figuro, Foliume, segElevia, BrokerDO, 
 6b. **Cotización:** arrancar 100 % manual; ¿quién activa toggles API? (dueño/admin)  
 7. **Comisiones / CFDI:** ¿registro interno primero o **timbrado SAT** desde día 1?  
 7b. **PAC preferido** y si cada tenant trae su CSD (sí, por diseño multi razón social)  
-8. **Correo de envíos:** ¿SMTP del cliente o correo gestionado por Segurod?  
+8. **Correo de envíos:** ¿SMTP del cliente o correo gestionado por SmartApps?  
 9. **Respaldos:** ¿restore self-service o solo vía soporte?  
 10. **Cartera inicial:** ¿alta manual, import Excel, o sync con aseguradoras?  
 11. **Dominio:** app.segurod.mx vs subdominio por oficina (acme.segurod.mx)  
-12. **Marca visual Segurod** (la plataforma) vs marca de cada tenant
+12. **Marca visual SmartApps Seguros** (la plataforma) vs marca de cada tenant
 
 ---
 

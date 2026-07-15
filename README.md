@@ -1,7 +1,14 @@
-# Segurod
+# SmartApps Seguros
 
-Borrador de plataforma **SaaS** para agentes de seguros: cotización (WhatsApp + web móvil), cartera, agenda, comisiones, portal del cliente y configuración multi-tenant (logo, usuarios, permisos, auditoría, correo, respaldos).
+ERP SaaS para la administración integral de empresas de seguros.  
+Desarrollado por **SmartApps**.
 
-Documento principal: **[PROYECTO_BORRADOR.md](./PROYECTO_BORRADOR.md)**
+**Eslogan:** Todo tu negocio de seguros, en un solo lugar.
 
-En esta etapa no hay implementación de código; solo definición de producto.
+## Documentos
+
+- Borrador de producto / módulos: [`PROYECTO_BORRADOR.md`](./PROYECTO_BORRADOR.md)
+- Banner y página comercial: [`marketing/banner-comercial.html`](./marketing/banner-comercial.html)
+- Banner PNG: [`marketing/assets/smartapps-seguros-banner.png`](./marketing/assets/smartapps-seguros-banner.png)
+
+En esta etapa el foco es definición de producto (borrador). La implementación de código vendrá después del recorte de alcance.

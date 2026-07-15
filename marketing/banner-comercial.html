@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmartApps Seguros — Todo tu negocio de seguros, en un solo lugar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #0b6bcb;
+      --violet: #7b3fe4;
+      --magenta: #e0118a;
+      --ink: #12243f;
+      --muted: #4a5d78;
+      --surface: #f4f8ff;
+      --white: #ffffff;
+      --grad: linear-gradient(115deg, #0b6bcb 0%, #7b3fe4 48%, #e0118a 100%);
+      --shadow: 0 24px 60px rgba(18, 36, 63, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Manrope, system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 85% -10%, rgba(224, 17, 138, 0.08), transparent 55%),
+        radial-gradient(900px 500px at -10% 20%, rgba(11, 107, 203, 0.10), transparent 50%),
+        linear-gradient(180deg, #ffffff 0%, var(--surface) 40%, #ffffff 100%);
+      line-height: 1.55;
+    }
+
+    h1, h2, h3, .brand-word {
+      font-family: Sora, Manrope, sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    a { color: inherit; }
+
+    .wrap {
+      width: min(1120px, calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    /* —— HERO BANNER —— */
+    .hero {
+      position: relative;
+      min-height: 88vh;
+      display: grid;
+      align-items: end;
+      padding: 1.25rem 0 3.5rem;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(120deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.72) 42%, rgba(244,248,255,0.35) 100%),
+        url("assets/smartapps-seguros-banner.png") center/cover no-repeat;
+      z-index: 0;
+    }
+
+    .hero-mesh {
+      position: absolute;
+      inset: auto -5% -20% 40%;
+      height: 70%;
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(11,107,203,0.18) 1px, transparent 0);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(90deg, transparent, #000 30%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      gap: 2rem;
+      max-width: 640px;
+      padding-top: 2rem;
+      animation: rise 0.9s ease both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .brand img {
+      width: min(280px, 70vw);
+      height: auto;
+      display: block;
+    }
+
+    .brand-fallback {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-fallback svg { width: 220px; height: auto; }
+
+    .product-tag {
+      display: inline-block;
+      margin-top: 0.15rem;
+      font-family: Sora, sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      color: var(--blue);
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4.6vw, 3.35rem);
+      line-height: 1.12;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero .lead {
+      margin: 0;
+      font-size: clamp(1.05rem, 2vw, 1.25rem);
+      color: var(--muted);
+      max-width: 34ch;
+      font-weight: 600;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 3rem;
+      padding: 0.75rem 1.35rem;
+      border-radius: 0.75rem;
+      font-weight: 700;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn-primary {
+      color: var(--white);
+      background: var(--grad);
+      box-shadow: 0 12px 30px rgba(123, 63, 228, 0.28);
+    }
+
+    .btn-ghost {
+      color: var(--ink);
+      background: rgba(255,255,255,0.75);
+      border: 1px solid rgba(18,36,63,0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    /* —— SECTIONS —— */
+    section {
+      padding: 4.5rem 0;
+    }
+
+    .section-title {
+      margin: 0 0 0.75rem;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+    }
+
+    .section-lead {
+      margin: 0 0 2rem;
+      color: var(--muted);
+      max-width: 60ch;
+      font-size: 1.05rem;
+    }
+
+    .promise {
+      background: var(--grad);
+      color: var(--white);
+      border-radius: 1.5rem;
+      padding: clamp(1.75rem, 4vw, 2.75rem);
+      box-shadow: var(--shadow);
+      animation: rise 1s 0.15s ease both;
+    }
+
+    .promise p {
+      margin: 0;
+      font-family: Sora, sans-serif;
+      font-size: clamp(1.35rem, 3vw, 1.9rem);
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .promise span {
+      display: block;
+      margin-top: 0.65rem;
+      font-family: Manrope, sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      opacity: 0.92;
+    }
+
+    .split {
+      display: grid;
+      gap: 2rem;
+    }
+
+    @media (min-width: 860px) {
+      .split-2 { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+      .hero-inner { padding-bottom: 1rem; }
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.82);
+      border: 1px solid rgba(18,36,63,0.08);
+      border-radius: 1.25rem;
+      padding: 1.5rem 1.6rem;
+      box-shadow: 0 10px 30px rgba(18,36,63,0.05);
+    }
+
+    .panel h3 {
+      margin: 0 0 0.65rem;
+      font-size: 1.15rem;
+    }
+
+    .panel p { margin: 0; color: var(--muted); }
+
+    .values {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .value {
+      padding: 1.25rem 1.3rem;
+      border-radius: 1.1rem;
+      background: var(--white);
+      border-top: 3px solid transparent;
+      border-image: var(--grad) 1;
+      box-shadow: 0 8px 24px rgba(18,36,63,0.06);
+      transition: transform 0.25s ease;
+    }
+
+    .value:hover { transform: translateY(-3px); }
+
+    .value strong {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-family: Sora, sans-serif;
+      font-size: 1rem;
+    }
+
+    .value p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .features {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .features li {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.95rem 1rem;
+      background: var(--white);
+      border-radius: 0.9rem;
+      border: 1px solid rgba(18,36,63,0.07);
+      font-weight: 600;
+      font-size: 0.98rem;
+    }
+
+    .features li::before {
+      content: "";
+      width: 0.7rem;
+      height: 0.7rem;
+      margin-top: 0.35rem;
+      border-radius: 50%;
+      flex: 0 0 auto;
+      background: var(--grad);
+    }
+
+    .banner-export {
+      border-radius: 1.25rem;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(18,36,63,0.08);
+    }
+
+    .banner-export img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .caption {
+      margin: 0.75rem 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    footer {
+      padding: 2.5rem 0 3rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      border-top: 1px solid rgba(18,36,63,0.08);
+    }
+
+    footer strong {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-family: Sora, sans-serif;
+    }
+
+    @media (max-width: 700px) {
+      .hero { min-height: auto; padding-top: 1.5rem; }
+      .hero::before {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.95) 35%, rgba(255,255,255,0.78) 100%),
+          url("assets/smartapps-seguros-banner.png") 70% center/cover no-repeat;
+      }
+    }
+
+    @media print {
+      .hero { min-height: auto; page-break-after: always; }
+      .btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-mesh" aria-hidden="true"></div>
+    <div class="wrap hero-inner">
+      <div class="brand" aria-label="SmartApps Seguros">
+        <div class="brand-fallback">
+          <img src="assets/smartapps-logo.svg" alt="SmartApps" width="220" height="68" />
+        </div>
+      </div>
+      <div class="product-tag">Seguros</div>
+      <h1>Todo tu negocio de seguros, en un solo lugar.</h1>
+      <p class="lead">ERP SaaS para la administración integral de empresas de seguros.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#propuesta">Conoce la plataforma</a>
+        <a class="btn btn-ghost" href="#nosotros">Quiénes somos</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="wrap">
+        <div class="promise">
+          <p>Un solo sistema para administrar todo tu negocio de seguros.</p>
+          <span>Cotiza, opera cartera, comisiones, portal del cliente y decisiones en tiempo real — con la marca de tu oficina.</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="nosotros">
+      <div class="wrap">
+        <h2 class="section-title">¿Quiénes somos?</h2>
+        <p class="section-lead">
+          <strong>SmartApps Seguros</strong> es una plataforma tecnológica desarrollada por <strong>SmartApps</strong>,
+          diseñada para transformar cómo agentes, promotorías y empresas del sector asegurador administran sus operaciones.
+        </p>
+        <div class="split split-2">
+          <div class="panel">
+            <h3>Centralizamos tu operación</h3>
+            <p>
+              En una sola plataforma unimos la gestión comercial, administrativa y financiera:
+              automatizas procesos, mejoras el servicio al cliente y decides con información en tiempo real.
+            </p>
+          </div>
+          <div class="panel">
+            <h3>Nuestra filosofía</h3>
+            <p>
+              La tecnología debe trabajar para las personas, no las personas para la tecnología.
+              Cada función está pensada para ahorrar tiempo, reducir errores y dejar que tu equipo venda y atienda mejor.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap split split-2">
+        <div class="panel">
+          <h3>Misión</h3>
+          <p>
+            Desarrollar soluciones tecnológicas innovadoras que impulsen la transformación digital del sector asegurador,
+            con una plataforma segura, intuitiva y escalable que incremente productividad y rentabilidad.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Visión</h3>
+          <p>
+            Ser la plataforma SaaS líder para la administración de empresas de seguros en México y Latinoamérica,
+            reconocida por innovación, confiabilidad y tecnología de clase mundial.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Propósito</h3>
+          <p>
+            Impulsar el crecimiento de las empresas de seguros mediante tecnología que simplifique procesos,
+            conecte la información y facilite decisiones estratégicas.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Objetivo</h3>
+          <p>
+            Digitalizar y automatizar la operación aseguradora: menos procesos manuales,
+            menores tiempos de respuesta e información estratégica para decidir mejor.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Valores</h2>
+        <p class="section-lead">Principios con los que construimos SmartApps Seguros.</p>
+        <div class="values">
+          <article class="value"><strong>Innovación</strong><p>Tecnología enfocada en problemas reales y valor medible.</p></article>
+          <article class="value"><strong>Confianza</strong><p>Protegemos la información con seguridad y transparencia.</p></article>
+          <article class="value"><strong>Compromiso</strong><p>Acompañamos a largo plazo el crecimiento de cada oficina.</p></article>
+          <article class="value"><strong>Simplicidad</strong><p>Interfaces claras que bajan la complejidad operativa.</p></article>
+          <article class="value"><strong>Excelencia</strong><p>Mejora continua en producto, servicio y experiencia.</p></article>
+          <article class="value"><strong>Integridad</strong><p>Ética, responsabilidad y profesionalismo en cada decisión.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="propuesta">
+      <div class="wrap">
+        <h2 class="section-title">Propuesta de valor</h2>
+        <p class="section-lead">
+          Con SmartApps Seguros operas cotización, cartera, finanzas del intermediario y experiencia del cliente
+          desde la nube — listo para WhatsApp, web móvil, APIs de aseguradoras y facturación SAT.
+        </p>
+        <ul class="features">
+          <li>Gestionar clientes y prospectos (CRM)</li>
+          <li>Crear y administrar cotizaciones (manual o API)</li>
+          <li>Controlar pólizas y renovaciones</li>
+          <li>Gestionar comisiones, splits y cobranza</li>
+          <li>Dar seguimiento a siniestros</li>
+          <li>Administrar documentos digitales</li>
+          <li>Consultar KPIs y panel ejecutivo (CEO)</li>
+          <li>Automatizar recordatorios, email y push</li>
+          <li>Portal del cliente instalable (PWA)</li>
+          <li>Multi razón social y certificados SAT</li>
+          <li>Acceso en la nube desde cualquier lugar</li>
+          <li>Integración con aseguradoras y otros sistemas</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2 class="section-title">Banner comercial</h2>
+        <p class="section-lead">Pieza gráfica lista para LinkedIn, propuestas y presentaciones.</p>
+        <div class="banner-export">
+          <img src="assets/smartapps-seguros-banner.png" alt="Banner SmartApps Seguros — Todo tu negocio de seguros, en un solo lugar" />
+        </div>
+        <p class="caption">Archivo: <code>marketing/assets/smartapps-seguros-banner.png</code></p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap panel">
+        <h3>Visión a largo plazo</h3>
+        <p>
+          Convertir a SmartApps en un ecosistema de soluciones empresariales, donde
+          <strong>SmartApps Seguros</strong> sea la plataforma líder del sector asegurador
+          y el punto de partida de una suite que impulse la transformación digital de múltiples industrias.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <strong>SmartApps Seguros</strong> · “Todo tu negocio de seguros, en un solo lugar.”<br />
+      Desarrollado por SmartApps
+    </div>
+  </footer>
+</body>
+</html>
