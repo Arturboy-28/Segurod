@@ -328,18 +328,43 @@ Segurod se vende por **suscripción** (SaaS). Cada cliente (oficina, broker o ag
 - Credenciales por provider (sandbox/prod)
 - Quién puede editar estas llaves (solo admin/dueño)
 
+#### Comisiones otorgadas por aseguradora (en config de APIs / compañías)
+Por cada empresa de seguros (haya API o sea manual) se define lo que **paga la aseguradora a la oficina**:
+
+- % o monto fijo por ramo / producto / paquete (ej. auto amplio 12 %, GMM 18 %)
+- Vigencia de la tabla (desde / hasta)
+- Notas (bonos, escalones, excepciones)
+- Usado para calcular “comisión por facturar” al cerrar/emitir
+
+Sin esto, las comisiones se capturan a mano; con esto, se proponen solas y se pueden ajustar.
+
 #### Usuarios (vendedores) y permisos
 Roles mínimos sugeridos:
 
 | Rol | Puede |
 |-----|--------|
-| **Dueño** | Todo + billing SaaS + borrar tenant (si aplica) |
+| **CEO / Dueño** | Todo + **panel ejecutivo** + billing SaaS |
 | **Admin** | Configuración, usuarios, reportes, comisiones, APIs |
 | **Vendedor / agente** | Cotizar, cartera asignada, agenda, leads |
 | **Asistente** | Carga docs, agenda, seguimiento (sin ver comisiones si se restringe) |
 | **Cliente** | Solo portal del asegurado |
 
-Permisos granulares (ejemplos): ver comisiones, facturar, editar config, exportar cartera, activar API, ver auditoría, gestionar usuarios.
+#### Comisiones internas por usuario / agente
+Además de lo que paga la aseguradora, la oficina reparte hacia adentro:
+
+| Concepto | Ejemplo |
+|----------|---------|
+| Comisión de la aseguradora (oficina) | 12 % de la prima |
+| % o monto del **vendedor** | 60 % de esa comisión (o 7.2 % de prima) |
+| % **oficina / CEO** | El resto |
+| Overrides | Bono por meta, trato especial por agente |
+
+Configurable en la ficha del usuario (y/o por ramo). Al cerrar una venta se calcula:
+1) comisión bruta según tabla de la aseguradora →  
+2) split interno según reglas del agente →  
+3) queda en pendientes por facturar / pagar según el flujo de comisiones.
+
+Permisos granulares (ejemplos): ver comisiones propias, ver comisiones del equipo, facturar, editar tablas de comisión, editar config, exportar cartera, activar API, ver auditoría, ver **panel CEO**.
 
 #### Auditoría de usuarios
 Bitácora inmutable (o difícil de alterar) con:
@@ -362,6 +387,35 @@ Vista filtrable para admin/dueño; retención configurable (ej. 90 días / 1 añ
 #### Billing SaaS (config lateral, fase posterior)
 - Plan activo, límites (usuarios, cotizaciones, WhatsApp)
 - Facturación de la suscripción Segurod (separada de comisiones a aseguradoras)
+
+### 8.0b Panel CEO / dirección (requerido)
+
+Vista ejecutiva de **toda la oficina** (no solo la cartera de un vendedor). Pensado para el dueño/CEO.
+
+**Resúmenes en un vistazo**
+- Cotizaciones creadas (hoy / semana / mes / rango)
+- Ventas cerradas (pólizas emitidas / ganadas)
+- % conversión cotización → venta
+- Primas cotizadas vs primas cerradas
+- Comisiones generadas / por facturar / cobradas
+- Movimientos recientes (alta lead, cotización, cierre, factura, pago)
+
+**Filtros y cortes**
+- Por periodo
+- Por agente / vendedor
+- Por aseguradora
+- Por canal (WhatsApp, web, manual)
+
+**Por categorías / ramos** (drill-down)
+- Autos  
+- Casa / hogar  
+- Vida  
+- Gastos médicos  
+- Moto, flotillas, otros (según se activen)
+
+En cada categoría: cotizaciones, cerradas, prima, comisión, ranking de agentes.
+
+**Permiso:** solo CEO / Dueño (y Admin si se delega). Los vendedores no ven totales de toda la oficina salvo que se autorice.
 
 ---
 
@@ -394,21 +448,30 @@ Funciones operativas que **sí entran** (además de la configuración SaaS):
 
 ### 8.4 Comisiones
 
-Estados mínimos:
+**Dos capas (requerido):**
+
+1. **Aseguradora → oficina** — % definidos en config de compañías/APIs  
+2. **Oficina → usuario/agente** — split interno en ficha de usuario  
+
+Estados mínimos (capa oficina vs aseguradora):
 
 | Estado | Significado |
 |--------|-------------|
-| Pendiente por facturar | Ya se ganó / está lista para facturar a la aseguradora |
-| Facturada / pendiente de pago | Ya se envió factura; se espera depósito |
-| Pagada | Conciliada |
+| Pendiente por facturar | Lista para facturar a la aseguradora |
+| Facturada / pendiente de pago | Factura enviada; se espera depósito |
+| Pagada | Conciliada con la aseguradora |
 | En disputa / ajuste | Diferencia con estado de cuenta |
+
+Interno (vendedor): comisión del agente pendiente / liberada / pagada (cuando la oficina paga a su fuerza de ventas).
 
 Vistas:
 
 - Por aseguradora  
 - Por periodo  
-- Por agente (si hay oficina)  
-- Totales: por facturar / por cobrar / cobrado
+- Por agente  
+- Por ramo/categoría  
+- Totales: por facturar / por cobrar / cobrado  
+- Panel CEO: rollup de todo lo anterior
 
 ### 8.5 Facturación de comisiones a aseguradoras
 
