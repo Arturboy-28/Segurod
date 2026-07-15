@@ -10,6 +10,7 @@ Desarrollado por **SmartApps**.
 - Borrador de producto / módulos: [`PROYECTO_BORRADOR.md`](./PROYECTO_BORRADOR.md)
 - Banner y página comercial: [`marketing/banner-comercial.html`](./marketing/banner-comercial.html)
 - Banner PNG: [`marketing/assets/smartapps-seguros-banner.png`](./marketing/assets/smartapps-seguros-banner.png)
-- Logo oficial: [`marketing/assets/smartapps-logo.png`](./marketing/assets/smartapps-logo.png)
+- Logo empresa SmartApps: [`marketing/assets/smartapps-logo.png`](./marketing/assets/smartapps-logo.png)
+- Logo app SmartApps Seguros: [`marketing/assets/smartapps-seguros-logo.png`](./marketing/assets/smartapps-seguros-logo.png)
 
 En esta etapa el foco es definición de producto (borrador). La implementación de código vendrá después del recorte de alcance.

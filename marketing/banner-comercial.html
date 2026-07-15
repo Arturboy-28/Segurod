@@ -92,37 +92,61 @@
       to { opacity: 1; transform: none; }
     }
 
-    .brand {
+    .brand-stack {
+      display: grid;
+      gap: 1rem;
+      justify-items: start;
+    }
+
+    .parent-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .parent-logo {
+      width: min(56px, 14vw);
+      height: auto;
+      display: block;
+    }
+
+    .parent-label {
+      margin: 0;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .app-brand {
       display: flex;
       align-items: center;
       gap: 1rem;
     }
 
-    .logo-img {
-      width: min(112px, 28vw);
+    .app-logo {
+      width: min(120px, 30vw);
       height: auto;
       display: block;
-      filter: drop-shadow(0 10px 24px rgba(123, 63, 228, 0.18));
+      filter: drop-shadow(0 12px 28px rgba(123, 63, 228, 0.22));
     }
-
-    .brand-text { display: grid; gap: 0.2rem; }
 
     .product-tag {
       display: inline-block;
       font-family: Sora, sans-serif;
-      font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+      font-size: clamp(1.15rem, 2.6vw, 1.5rem);
       font-weight: 800;
       letter-spacing: 0.04em;
       background: var(--grad);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      text-transform: none;
     }
 
     .brand-sub {
-      margin: 0;
-      font-size: 0.85rem;
+      margin: 0.2rem 0 0;
+      font-size: 0.9rem;
       font-weight: 600;
       color: var(--muted);
     }
@@ -364,11 +388,17 @@
   <header class="hero">
     <div class="hero-mesh" aria-hidden="true"></div>
     <div class="wrap hero-inner">
-      <div class="brand" aria-label="SmartApps Seguros">
-        <img class="logo-img" src="assets/smartapps-logo.png" alt="SmartApps" width="280" height="280" />
-        <div class="brand-text">
-          <div class="product-tag">SmartApps Seguros</div>
-          <p class="brand-sub">by SmartApps</p>
+      <div class="brand-stack" aria-label="SmartApps Seguros">
+        <div class="parent-brand">
+          <img class="parent-logo" src="assets/smartapps-logo.png" alt="SmartApps" width="56" height="56" />
+          <p class="parent-label">SmartApps</p>
+        </div>
+        <div class="app-brand">
+          <img class="app-logo" src="assets/smartapps-seguros-logo.png" alt="SmartApps Seguros" width="120" height="120" />
+          <div>
+            <div class="product-tag">SmartApps Seguros</div>
+            <p class="brand-sub">ERP SaaS para empresas de seguros</p>
+          </div>
         </div>
       </div>
       <h1>Todo tu negocio de seguros, en un solo lugar.</h1>

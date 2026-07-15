@@ -8,7 +8,8 @@
 **Estado:** borrador / discovery  
 **Alcance de este documento:** definición del producto (cotización + operaciones del agente + portal del cliente), canales, integración con aseguradoras y plan de implementación.  
 **Fuera de alcance ahora:** código de producto, infraestructura en producción, contratos con aseguradoras.  
-**Material comercial:** `marketing/banner-comercial.html` y `marketing/assets/smartapps-seguros-banner.png`
+**Material comercial:** `marketing/banner-comercial.html`, banner PNG y logos en `marketing/assets/`  
+**Logo empresa:** `smartapps-logo.png` · **Logo app:** `smartapps-seguros-logo.png` (celular + escudo)
 
 > Nota: en versiones previas del borrador se usó el nombre de trabajo “Segurod”. El nombre comercial vigente es **SmartApps Seguros**.
 
